@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#006630"/>
+      <stop offset="100%" stop-color="#004420"/>
+    </linearGradient>
+    <linearGradient id="lbl" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#009944"/>
+      <stop offset="100%" stop-color="#004422"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- GBA body (colored plastic) -->
+  <path d="M4,0 H60 Q64,0 64,4 V96 Q64,100 60,100 H4 Q0,100 0,96 V4 Q0,0 4,0 Z"
+        fill="url(#bg)" stroke="rgba(0,0,0,0.3)" stroke-width="0.5"/>
+  <!-- Top contact slot -->
+  <rect x="20" y="0" width="24" height="5" fill="#111" rx="0"/>
+  <!-- GBA contact strips (gold, at top) -->
+  <rect x="21" y="0" width="3" height="4" fill="#B8960C"/>
+  <rect x="26" y="0" width="3" height="4" fill="#B8960C"/>
+  <rect x="31" y="0" width="3" height="4" fill="#B8960C"/>
+  <rect x="36" y="0" width="3" height="4" fill="#B8960C"/>
+  <rect x="41" y="0" width="3" height="4" fill="#B8960C"/>
+  <!-- GBA chip indicator (small notch top-right of contacts) -->
+  <rect x="44" y="0" width="1" height="5" fill="#333"/>
+  <!-- Label area -->
+  <rect x="4" y="8" width="56" height="68" rx="2" fill="url(#lbl)"/>
+  <rect x="4" y="8" width="56" height="68" rx="2" fill="url(#shine)"/>
+  <!-- Platform text -->
+  <text x="32" y="18" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="5" font-weight="700" fill="white" opacity="0.85">GAME BOY ADVANCE</text>
+  <line x1="8" y1="21" x2="56" y2="21" stroke="white" stroke-width="0.4" opacity="0.3"/>
+  <!-- Silhouette -->
+  
+      <!-- Rayquaza: long serpent -->
+      <path d="M32,28 Q38,35 34,42 Q28,50 34,58 Q38,65 32,70"
+            fill="none" stroke="#228822" stroke-width="7" stroke-linecap="round"/>
+      <path d="M32,28 Q38,35 34,42 Q28,50 34,58 Q38,65 32,70"
+            fill="none" stroke="#44AA44" stroke-width="4" stroke-linecap="round"/>
+      <polygon points="32,26 28,22 36,22" fill="#228822"/>
+      <polygon points="26,36 20,32 26,40" fill="#FFEE00"/>
+      <polygon points="42,42 48,38 42,46" fill="#FFEE00"/>
+    
+  <!-- Game title -->
+  <rect x="4" y="64" width="56" height="12" rx="0" fill="rgba(0,0,0,0.25)"/>
+  <text x="32" y="74" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="7.5" font-weight="900" fill="white" letter-spacing="0.2">EMERALD</text>
+  <!-- Nintendo logo at bottom -->
+  <text x="32" y="92" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="5" fill="white" opacity="0.5">Nintendo</text>
+</svg>

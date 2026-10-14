@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Privacy — Trainer Ledger{% endblock %}
+
+{% block content %}
+<div class="container-sm">
+  <section class="support-hero">
+    <div class="launch-badge">Privacy</div>
+    <h1 class="support-title">Privacy and account data</h1>
+    <p class="support-sub">
+      Trainer Ledger stores only the data needed to run your account, save your progress, and deliver core site features.
+    </p>
+  </section>
+
+  <section class="support-detail-grid">
+    <article class="support-detail">
+      <div class="support-detail-kicker">What we store</div>
+      <ul class="support-detail-list">
+        <li>Username and hashed password</li>
+        <li>Optional recovery email</li>
+        <li>Per-game progress, notes, and V2 state</li>
+        <li>Suggestions and bug reports you submit</li>
+      </ul>
+    </article>
+    <article class="support-detail">
+      <div class="support-detail-kicker">What we do not ask for</div>
+      <ul class="support-detail-list">
+        <li>No credit card information on Trainer Ledger itself</li>
+        <li>No software downloads to use the tracker</li>
+        <li>No bank details or government IDs</li>
+      </ul>
+    </article>
+    <article class="support-detail">
+      <div class="support-detail-kicker">Support and third parties</div>
+      <p class="support-detail-copy">Support links may send you to Patreon or other external providers. Those services have their own privacy policies and account systems.</p>
+      <p class="support-detail-copy">Questions: <a href="mailto:{{ support_email }}">{{ support_email }}</a></p>
+    </article>
+  </section>
+</div>
+{% endblock %}

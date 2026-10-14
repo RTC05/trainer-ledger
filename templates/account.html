@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Account Settings — Trainer Ledger{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-icon">⚙️</div>
+    <h1 class="auth-title">Account settings</h1>
+    <p class="auth-sub">Manage your recovery email and change your password here.</p>
+
+    {% if error %}
+    <div class="auth-error" role="alert">{{ error }}</div>
+    {% endif %}
+
+    {% if message %}
+    <div class="auth-success" role="status">
+      <strong>{{ message }}</strong>
+    </div>
+    {% endif %}
+
+    <div class="auth-success auth-success--neutral" role="note">
+      <strong>Change password</strong>
+      <p class="auth-success-copy">If you are already signed in, this is the place to reset it. Enter a new password below and save.</p>
+    </div>
+
+    <form method="post" action="/account" class="auth-form">
+      <label class="auth-label" for="email">Recovery email
+        <span class="auth-hint">(used for password reset)</span>
+      </label>
+      <input class="auth-input" id="email" name="email"
+             type="email" autocomplete="email"
+             value="{{ account_email or '' }}" />
+
+      <label class="auth-label" for="password">New password
+        <span class="auth-hint">(enter one to change it now)</span>
+      </label>
+      <input class="auth-input" id="password" name="password"
+             type="password" autocomplete="new-password"
+             placeholder="Enter a new password"
+             minlength="6" />
+
+      <label class="auth-label" for="confirm">Confirm new password</label>
+      <input class="auth-input" id="confirm" name="confirm"
+             type="password" autocomplete="new-password"
+             placeholder="Re-enter the new password" />
+
+      <button class="auth-btn" type="submit">Save settings</button>
+    </form>
+
+    <p class="auth-switch">
+      Signed out and need the email flow instead?
+      <a href="/forgot-password" class="auth-link">Use forgot password</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+<div id="card-{{ p.id }}"
+     class="poke-card {% if p.caught %}caught{% endif %} {% if p.shiny %}shiny{% endif %}"
+     data-name="{{ p.name }}"
+     data-num="{{ '%03d' | format(p.dex_number) }}"
+     data-types="{{ p.types | join(',') }}"
+     hx-post="/toggle/{{ game.id }}/{{ p.id }}"
+     hx-target="#card-{{ p.id }}"
+     hx-swap="outerHTML"
+     title="{{ p.name | capitalize }} — Click to toggle caught">
+
+  <!-- Shiny toggle — stopPropagation so it doesn't also fire the catch toggle -->
+  <button class="shiny-btn {% if p.shiny %}shiny-on{% endif %}"
+          hx-post="/toggle-shiny/{{ game.id }}/{{ p.id }}"
+          hx-target="#card-{{ p.id }}"
+          hx-swap="outerHTML"
+          onclick="event.stopPropagation()"
+          title="{% if p.shiny %}Remove shiny{% else %}Mark as shiny{% endif %}">
+    ✨
+  </button>
+
+  <div class="caught-badge" aria-hidden="true">&#10003;</div>
+  <div class="poke-num">#{{ "%03d" | format(p.dex_number) }}</div>
+
+  <!-- Info button — opens detail drawer, stops catch toggle -->
+  <button class="info-btn"
+          onclick="event.stopPropagation(); openDetailDrawer({{ p.id }}, '{{ p.name }}', {{ p.dex_number }})"
+          title="View Pokédex info, stats &amp; evolutions"
+          aria-label="Info for {{ p.name }}">ⓘ</button>
+
+  <div class="poke-sprite-wrap">
+    {% if p.sprite_url %}
+    <img class="poke-sprite"
+         src="{{ p.sprite_url }}"
+         alt="{{ p.name }}"
+         width="72" height="72"
+         loading="lazy"
+         onerror="this.parentNode.innerHTML='<div class=poke-no-sprite>&#10067;</div>'" />
+    {% else %}
+    <div class="poke-no-sprite">&#10067;</div>
+    {% endif %}
+  </div>
+
+  <div class="poke-name">{{ p.name }}</div>
+
+  <div class="type-row">
+    {% for i in range(p.types | length) %}
+    <span class="type-badge" style="background: {{ p.type_colors[i] }}">{{ p.types[i] }}</span>
+    {% endfor %}
+  </div>
+</div>

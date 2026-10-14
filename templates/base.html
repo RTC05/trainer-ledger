@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Tell every browser/proxy: never cache this page. The inline JS changes
+       on every deploy; a stale cached page will run old code. -->
+  <meta http-equiv="Cache-Control" content="no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>{% block title %}Trainer Ledger{% endblock %}</title>
+  <!-- Apply theme before render to prevent flash -->
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');</script>
+  <script src="/static/htmx.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css?v={{ css_v }}" />
+  <link rel="stylesheet" href="/static/game-detail.css?v={{ css_v }}" />
+  <link rel="stylesheet" href="/static/team-builder.css?v={{ css_v }}" />
+  <link rel="stylesheet" href="/static/auth.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="/" class="navbar-logo">
+      <span class="navbar-logo-mark">&#9670;</span>
+      <span class="navbar-logo-wordmark">Trainer Ledger</span>
+    </a>
+    <span class="navbar-sub">Fan-made Pokemon run guides and tracker</span>
+    <div class="navbar-right">
+      <a href="/about" class="navbar-admin-link" title="Learn what Trainer Ledger is">About</a>
+      <a href="/security" class="navbar-admin-link" title="Verify the official site and support details">Security</a>
+      <a href="/support" class="navbar-admin-link" title="Support the project and help fund new guides">Support</a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" id="theme-btn">🌙</button>
+      <button class="theme-toggle" onclick="toggleCryMute()" aria-label="Toggle Pokémon cries" id="cry-mute-btn">🔊</button>
+      {% if current_user %}
+        <a href="/updates" class="navbar-admin-link" title="See latest updates and request features">What’s New</a>
+        <a href="/account" class="navbar-admin-link" title="Manage your email and password">Account</a>
+        <span class="navbar-username">&#128100; {{ current_user.username }}</span>
+        {% if current_user.is_admin %}
+          <a href="/admin" class="navbar-admin-link">Admin</a>
+        {% endif %}
+  <form action="/logout" method="post" style="display:inline">
+          <button type="submit" class="navbar-logout-btn">Log out</button>
+        </form>
+      {% else %}
+        <a href="/updates" class="navbar-admin-link" title="See latest updates">What’s New</a>
+        Regional dex tracking, route planning, and full-run support.
+      {% endif %}
+    </div>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <footer class="footer">
+    Trainer Ledger is a fan-made Pokemon tracker and playthrough guide.
+    Pokémon data from <a href="https://pokeapi.co" target="_blank">PokéAPI</a>.
+    Not affiliated with Nintendo or The Pokémon Company.
+    &nbsp;·&nbsp;
+    <a href="/about">About</a>
+    &nbsp;·&nbsp;
+    <a href="/privacy">Privacy</a>
+    &nbsp;·&nbsp;
+    <a href="/security">Security</a>
+    &nbsp;·&nbsp;
+    <a href="/support">Support the project</a>
+    &nbsp;·&nbsp;
+    <a href="/health" style="opacity:.45; font-size:11px; text-decoration:none;" title="Server health &amp; version">
+      v{{ app_version }}
+    </a>
+  </footer>
+
+  <!-- Pokémon detail drawer (always present) -->
+  <div id="drawer-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
+  <aside id="poke-drawer" class="poke-drawer" role="dialog" aria-modal="true" aria-label="Pokémon Details">
+    <button class="drawer-close" onclick="closeDetailDrawer()" aria-label="Close">&times;</button>
+    <div class="drawer-scroll" id="drawer-scroll"></div>
+  </aside>
+
+  <script src="/static/evo_corrections.js?v={{ js_v }}"></script>
+  <script src="/static/detail-drawer.js?v={{ js_v }}"></script>
+  <script src="/static/stat-tracker.js?v={{ js_v }}"></script>
+  <script src="/static/enhancements.js?v={{ js_v }}"></script>
+  <script>
+    // Set correct icons on load
+    (function() {
+      const t = localStorage.getItem('theme') || 'dark';
+      const themeBtn = document.getElementById('theme-btn');
+      if (themeBtn) themeBtn.textContent = t === 'light' ? '☀️' : '🌙';
+      const muteBtn = document.getElementById('cry-mute-btn');
+      if (muteBtn) muteBtn.textContent = localStorage.getItem('cries_muted') === 'true' ? '🔇' : '🔊';
+    })();
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      const btn = document.getElementById('theme-btn');
+      if (btn) btn.textContent = next === 'light' ? '☀️' : '🌙';
+    }
+  </script>
+
+</body>
+</html>

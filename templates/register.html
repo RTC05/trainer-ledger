@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Register — Trainer Ledger{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-icon">✨</div>
+    <h1 class="auth-title">Create account</h1>
+    <p class="auth-sub">Start your Pokémon journey</p>
+
+    {% if error %}
+    <div class="auth-error" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/register" class="auth-form">
+      <label class="auth-label" for="username">Username
+        <span class="auth-hint">(2–20 characters)</span>
+      </label>
+      <input class="auth-input" id="username" name="username"
+             type="text" autocomplete="username" required
+             minlength="2" maxlength="20"
+             value="{{ username or '' }}" />
+
+      <label class="auth-label" for="email">Recovery email
+        <span class="auth-hint">(optional, but recommended)</span>
+      </label>
+      <input class="auth-input" id="email" name="email"
+             type="email" autocomplete="email"
+             value="{{ email or '' }}" />
+
+      <label class="auth-label" for="password">Password
+        <span class="auth-hint">(at least 6 characters)</span>
+      </label>
+      <input class="auth-input" id="password" name="password"
+             type="password" autocomplete="new-password"
+             required minlength="6" />
+
+      <label class="auth-label" for="confirm">Confirm password</label>
+      <input class="auth-input" id="confirm" name="confirm"
+             type="password" autocomplete="new-password" required />
+
+      <button class="auth-btn" type="submit">Create account</button>
+    </form>
+
+    <p class="auth-switch">Security note: use only <strong>trainerledger.com</strong> for account access and never enter payment details on the tracker itself.</p>
+
+    <p class="auth-switch">Already have an account?
+      <a href="/login" class="auth-link">Log in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

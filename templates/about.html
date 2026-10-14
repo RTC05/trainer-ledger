@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}About Trainer Ledger{% endblock %}
+
+{% block content %}
+<div class="container-sm">
+  <section class="support-hero">
+    <div class="launch-badge">About</div>
+    <h1 class="support-title">What Trainer Ledger is</h1>
+    <p class="support-sub">
+      Trainer Ledger is a fan-made Pokemon tracker and guide hub built to help players plan full runs,
+      track regional dex progress, and keep route-important catches, items, secrets, and one-time decisions in one place.
+    </p>
+  </section>
+
+  <section class="support-detail-grid">
+    <article class="support-detail">
+      <div class="support-detail-kicker">Project status</div>
+      <p class="support-detail-copy">Trainer Ledger is a live public beta. The guides are usable now, but the product is still being actively refined, expanded, and hardened for broader public use.</p>
+    </article>
+    <article class="support-detail">
+      <div class="support-detail-kicker">What the site does</div>
+      <ul class="support-detail-list">
+        <li>Guide-first V2 pages for full playthrough support</li>
+        <li>Regional dex tracking before National Dex unlocks</li>
+        <li>Per-user progress, notes, and account recovery</li>
+        <li>Fan support through Patreon</li>
+      </ul>
+    </article>
+    <article class="support-detail">
+      <div class="support-detail-kicker">Affiliation</div>
+      <p class="support-detail-copy">Trainer Ledger is fan-made and is not affiliated with Nintendo, Game Freak, Creatures Inc., or The Pokémon Company.</p>
+      <p class="support-detail-copy">Questions: <a href="mailto:{{ support_email }}">{{ support_email }}</a></p>
+    </article>
+  </section>
+</div>
+{% endblock %}

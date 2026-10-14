@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Security — Trainer Ledger{% endblock %}
+
+{% block content %}
+<div class="container-sm">
+  <section class="support-hero">
+    <div class="launch-badge">Security</div>
+    <h1 class="support-title">How to recognize the real site</h1>
+    <p class="support-sub">
+      Trainer Ledger should only be used through its official domain and support email. This page exists to help users confirm they are in the right place before signing in, resetting a password, or supporting the project.
+    </p>
+  </section>
+
+  <section class="support-detail-grid">
+    <article class="support-detail">
+      <div class="support-detail-kicker">Official domain</div>
+      <p class="support-detail-copy"><strong>{{ public_url or 'https://trainerledger.com' }}</strong></p>
+      <p class="support-detail-copy">The live site should use HTTPS and the Trainer Ledger name throughout the public pages.</p>
+    </article>
+    <article class="support-detail">
+      <div class="support-detail-kicker">Official support email</div>
+      <p class="support-detail-copy"><strong>{{ support_email }}</strong></p>
+      <p class="support-detail-copy">Password reset and account communication should come from this address.</p>
+    </article>
+    <article class="support-detail">
+      <div class="support-detail-kicker">What the site will never ask for</div>
+      <ul class="support-detail-list">
+        <li>Credit card details directly on Trainer Ledger</li>
+        <li>Downloaded software to use the tracker</li>
+        <li>Payment by gift card, crypto, or direct transfer</li>
+      </ul>
+    </article>
+  </section>
+</div>
+{% endblock %}

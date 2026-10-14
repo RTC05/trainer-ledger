@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Team Builder &mdash; {{ game.name }}{% endblock %}
+
+{% block content %}
+<input type="hidden" id="tb-game-id" value="{{ game.id }}">
+
+<div class="tb-page">
+
+  <!-- Header -->
+  <div class="tb-header">
+    <a href="/game/{{ game.id }}" class="tb-back">&#8592; {{ game.name }}</a>
+    <div>
+      <div class="tb-title">&#127968; Team Builder</div>
+      <div class="tb-sub">Build the perfect team from your caught Pok&eacute;mon</div>
+    </div>
+    <button id="tb-suggest-btn" class="tb-suggest-btn" onclick="tbSuggestTeam()">
+      &#x2728; Suggest Best Team
+    </button>
+  </div>
+
+  <!-- Loading state -->
+  <div id="tb-load" class="tb-loading">
+    <div class="tb-spinner"></div>
+    <span>Loading your caught Pok&eacute;mon&hellip;</span>
+  </div>
+
+  <!-- Main content (hidden until loaded) -->
+  <div id="tb-main" style="display:none">
+
+    <!-- Team slots -->
+    <div class="tb-card">
+      <div class="tb-card-title">Your Team (pick up to 6)</div>
+      <div class="team-slots" id="team-slots"></div>
+    </div>
+
+    <div class="tb-layout">
+
+      <!-- Left: analysis -->
+      <div>
+
+        <!-- Gym matchups -->
+        <div class="tb-card">
+          <div class="tb-card-title">&#127942; Gym &amp; Elite Four Matchups</div>
+          {% if not game.versions %}
+          <p style="font-size:12px;color:var(--text-dim)">
+            No gym data available for {{ game.name }}.
+          </p>
+          {% else %}
+          <div id="analysis-gyms" class="gym-empty">
+            Add Pok&eacute;mon to your team to see matchups.
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Offensive coverage -->
+        <div class="tb-card">
+          <div class="tb-card-title">&#9889; Offensive Coverage (STAB)</div>
+          <div id="analysis-offense">
+            <p class="no-coverage">Add Pok&eacute;mon to see coverage.</p>
+          </div>
+        </div>
+
+        <!-- Defensive weaknesses -->
+        <div class="tb-card">
+          <div class="tb-card-title">&#128737; Defensive Weaknesses</div>
+          <div id="analysis-defense">
+            <p class="no-coverage">Add Pok&eacute;mon to see weaknesses.</p>
+          </div>
+        </div>
+
+      </div><!-- /left -->
+
+      <!-- Right: roster -->
+      <div>
+        <div class="tb-card">
+          <div class="tb-card-title">&#127385; Your Caught Pok&eacute;mon</div>
+          <div class="roster-bar">
+            <div class="roster-wrap">
+              <span class="roster-icon">&#x1F50D;</span>
+              <input class="roster-search" id="roster-search"
+                     type="text" placeholder="Search&hellip;"
+                     oninput="tbSearch(this.value)">
+            </div>
+            <span class="roster-count" id="roster-count"></span>
+          </div>
+          <div class="roster-grid" id="roster-grid"></div>
+        </div>
+      </div><!-- /right -->
+
+    </div><!-- /tb-layout -->
+  </div><!-- /tb-main -->
+</div>
+
+<link rel="stylesheet" href="/static/team-builder.css?v={{ css_v }}">
+<script src="/static/gym-data.js?v={{ css_v }}"></script>
+<script src="/static/team-builder.js?v={{ css_v }}"></script>
+{% endblock %}

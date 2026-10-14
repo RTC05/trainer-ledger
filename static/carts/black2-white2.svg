@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#222244"/>
+      <stop offset="100%" stop-color="#111133"/>
+    </linearGradient>
+    <linearGradient id="lbl" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#333388"/>
+      <stop offset="100%" stop-color="#DDDDF8"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- DS card body with top-right notch -->
+  <path d="M4,0 H46 L64,18 V96 Q64,100 60,100 H4 Q0,100 0,96 V4 Q0,0 4,0 Z"
+        fill="url(#bg)" stroke="rgba(0,0,0,0.3)" stroke-width="0.5"/>
+  <path d="M46,0 L64,18 H46 Z" fill="rgba(0,0,0,0.2)"/>
+  <!-- Bottom contacts -->
+  <rect x="12" y="95" width="5" height="5" rx="0.5" fill="#B8960C"/>
+  <rect x="19" y="95" width="5" height="5" rx="0.5" fill="#B8960C"/>
+  <rect x="26" y="95" width="5" height="5" rx="0.5" fill="#B8960C"/>
+  <rect x="33" y="95" width="5" height="5" rx="0.5" fill="#B8960C"/>
+  <rect x="40" y="95" width="5" height="5" rx="0.5" fill="#B8960C"/>
+  <!-- Label -->
+  <rect x="3" y="22" width="58" height="62" rx="2" fill="url(#lbl)"/>
+  <rect x="3" y="22" width="58" height="62" rx="2" fill="url(#shine)"/>
+  <!-- Platform text in notch area -->
+  <text x="28" y="12" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="5" font-weight="700" fill="rgba(255,255,255,0.8)">Nintendo DS</text>
+  <!-- Silhouette -->
+  
+      <!-- Zekrom: black dragon -->
+      <ellipse cx="32" cy="50" rx="9" ry="12" fill="#333355"/>
+      <polygon points="32,40 18,48 28,52" fill="#222244"/>
+      <polygon points="32,40 46,48 36,52" fill="#222244"/>
+      <ellipse cx="32" cy="38" rx="5" ry="5" fill="#444466"/>
+      <polygon points="32,34 29,28 35,28" fill="#333355"/>
+      <circle cx="32" cy="58" r="5" fill="#44AAFF" opacity="0.8"/>
+      <circle cx="32" cy="58" r="3" fill="#88CCFF" opacity="0.9"/>
+    
+  <!-- Title bar -->
+  <rect x="3" y="72" width="58" height="12" rx="0" fill="rgba(0,0,0,0.25)"/>
+  <text x="32" y="82" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="7" font-weight="900" fill="white" letter-spacing="0.2">B2 / W2</text>
+</svg>

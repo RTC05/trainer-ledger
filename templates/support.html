@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Support Trainer Ledger{% endblock %}
+
+{% block content %}
+<div class="container-sm">
+  <section class="support-hero">
+    <div class="launch-badge">Support the project</div>
+    <h1 class="support-title">Help fund the next phase of Trainer Ledger</h1>
+    <p class="support-sub">
+      Trainer Ledger is turning into a real public fan tool. Support helps pay for hosting,
+      production polish, guide research, and the work it takes to make every game feel like a complete run companion.
+    </p>
+    <div class="public-wip-banner" role="note" aria-label="Work in progress notice">
+      <strong>Work in progress:</strong> support helps fund a live product that is still being actively refined, expanded, and hardened for public use.
+    </div>
+    {% if patreon_url %}
+    <div class="support-hero-actions">
+      <a href="{{ patreon_url }}" class="support-card-cta" target="_blank" rel="noopener">Support on Patreon</a>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="support-grid">
+    {% for action in support_actions %}
+    <article class="support-card {{ 'support-card-disabled' if not action.enabled and action.kind != 'contact' else '' }}">
+      <div class="support-card-kicker">{{ action.kind | replace('-', ' ') | title }}</div>
+      <h2 class="support-card-title">{{ action.label }}</h2>
+      <p class="support-card-copy">{{ action.description }}</p>
+      {% if action.enabled %}
+      <a href="{{ action.href }}" class="support-card-cta" {% if action.kind != 'contact' %}target="_blank" rel="noopener"{% endif %}>Open</a>
+      {% else %}
+      <div class="support-card-note">Set the matching environment variable to enable this link.</div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </section>
+
+  <section class="support-detail-grid">
+    <article class="support-detail">
+      <div class="support-detail-kicker">What support funds</div>
+      <ul class="support-detail-list">
+        <li>Railway hosting and database upgrades</li>
+        <li>Per-game guide research and route cleanup</li>
+        <li>Visual polish and public-site improvements</li>
+        <li>Better fan-facing moderation and feedback tools</li>
+      </ul>
+    </article>
+
+    <article class="support-detail">
+      <div class="support-detail-kicker">Current production path</div>
+      <ul class="support-detail-list">
+        <li>Public landing and support pages</li>
+        <li>Postgres migration prep for multi-user growth</li>
+        <li>Improved account recovery and moderation tools</li>
+        <li>Deeper guide completeness across every game family</li>
+      </ul>
+    </article>
+
+    <article class="support-detail">
+      <div class="support-detail-kicker">Need something else?</div>
+      <p class="support-detail-copy">
+        You can reach the project directly at
+        <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
+      </p>
+      {% if public_url %}
+      <p class="support-detail-copy">Public site: <a href="{{ public_url }}">{{ public_url }}</a></p>
+      {% endif %}
+    </article>
+  </section>
+</div>
+{% endblock %}

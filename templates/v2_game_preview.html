@@ -1,0 +1,1945 @@
+{% extends "base.html" %}
+{% block title %}{{ v2_game.name }} V2 Guide — Trainer Ledger{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/v2-preview.css?v={{ css_v }}" />
+{% if v2_game.id == "scarlet-violet" %}
+<link rel="stylesheet" href="/static/sv-guide.css?v={{ css_v }}" />
+{% endif %}
+
+<main class="v2-shell v2-generic-shell v2-guide-shell" data-v2-game-id="{{ v2_game.id }}" data-v2-theme="{{ v2_game_theme.family }}" data-v2-screen="guide">
+  <script>
+    window.GAME_GEN = {{ v2_game.gen }};
+    window.GAME_ID = '{{ v2_game.id }}';
+    window.GAME_VERSIONS = {{ v2_game.versions | tojson }};
+  </script>
+
+  <div class="v2-console-layout">
+    <div class="v2-main-column">
+  <section class="v2-run-banner" aria-label="V2 game setup">
+    <div>
+      <p class="v2-kicker">{% if v2_game.id == 'scarlet-violet' %}Paldea field guide · <span data-sv-academy>Naranja Academy</span>{% else %}Strategy guide{% endif %}</p>
+      <h1 class="v2-guide-title">{{ v2_game.name }}</h1>
+      <p class="v2-guide-subtitle">{{ v2_game.region }} · Gen {{ v2_game.gen }} · {{ v2_game_profile.guide_focus }}</p>
+      <div class="v2-guide-header-actions">
+        <a href="/v2" class="v2-button v2-button-ghost">Back to V2 library</a>
+        <a href="/game/{{ v2_game.id }}" class="v2-button">Open legacy tracker</a>
+        <button class="v2-button v2-button-ghost" type="button" id="v2-generic-reset">Reset local V2 progress</button>
+      </div>
+      {% if generic_starters %}
+      <div class="v2-pokedex-choice" role="group" aria-label="Choose starter for {{ v2_game.name }}">
+        <span>Starter choice</span>
+        {% for starter in generic_starters %}
+        <button class="v2-generic-starter-toggle" type="button" data-generic-starter="{{ starter.dex }}" aria-pressed="false">
+          {% if v2_game.id == 'scarlet-violet' and starter.sprite_url %}<img src="{{ starter.sprite_url }}" alt="" width="64" height="64" />{% endif %}
+          <span>{{ starter.name }}</span>
+        </button>
+        {% endfor %}
+        <button class="v2-choice-clear" type="button" id="v2-generic-clear-starter">Clear starter</button>
+      </div>
+      {% if v2_game.id == 'scarlet-violet' %}<p class="sv-selection-status" data-sv-starter-status role="status" aria-live="polite">Choose your first partner above.</p>{% endif %}
+      {% if generic_starter_profiles %}
+      <div class="v2-starter-notes v2-generic-starter-profiles" aria-label="{{ v2_game.name }} starter pros and cons">
+        {% for starter in generic_starter_profiles %}
+        <article data-generic-starter-profile="{{ starter.dex }}">
+          <strong>{{ starter.name }}</strong>
+          <span><b class="v2-guide-label v2-guide-label-pros">Pros:</b> {{ starter.pros }}</span>
+          <span><b class="v2-guide-label v2-guide-label-cons">Cons:</b> {{ starter.cons }}</span>
+          {% if starter.role %}
+          <span><b class="v2-guide-label v2-guide-label-role">Role:</b> {{ starter.role }}</span>
+          {% endif %}
+          {% if starter.strategy %}
+          <span><b class="v2-guide-label v2-guide-label-plan">Plan:</b> {{ starter.strategy }}</span>
+          {% endif %}
+          {% if starter.picks %}
+          <div class="v2-starter-picks" aria-label="{{ starter.name }} recommended early catches">
+            {% for pick in starter.picks %}
+            <div class="v2-starter-pick">
+              <span><b>{{ pick.label }}:</b> {{ pick.name }} ({{ pick.where }})</span>
+              <span>{{ pick.why }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>
+      {% if generic_starter_profiles | selectattr('team_title') | list or generic_starter_profiles | selectattr('team_targets') | list %}
+      <div class="v2-starter-team-plans" aria-label="{{ v2_game.name }} starter team plans">
+        <div class="v2-starter-team-empty">
+          <strong>Pick a starter to see your early team plan.</strong>
+          <span>See nearby catches that complement your starter before the early battles.</span>
+        </div>
+        {% for starter in generic_starter_profiles %}
+        {% if starter.team_title or starter.team_targets %}
+        <article class="v2-starter-team-plan" data-generic-starter-plan="{{ starter.dex }}">
+          <p class="v2-kicker">Starter Team Spot</p>
+          <strong>{{ starter.name }} · {{ starter.team_title or "Early team plan" }}</strong>
+          {% if starter.team_summary %}
+          <p>{{ starter.team_summary }}</p>
+          {% endif %}
+          {% if starter.team_route %}
+          <div class="v2-starter-team-route">
+            {% for step in starter.team_route %}
+            <div class="v2-starter-team-route-step">
+              <span><b>{{ step.step }}:</b> {{ step.detail }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if starter.team_targets %}
+          <div class="v2-starter-team-grid">
+            {% for target in starter.team_targets %}
+            <article>
+              <strong>{{ target.name }}</strong>
+              <span><b>Where:</b> {{ target.where }}</span>
+              <span><b>Job:</b> {{ target.role }}</span>
+              <span>{{ target.reason }}</span>
+            </article>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if starter.sources %}
+          <p class="sv-build-sources">Move reference: {% for source in starter.sources %}<a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.label }}</a>{% endfor %}</p>
+          {% endif %}
+        </article>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endif %}
+      {% endif %}
+    </div>
+    <div class="v2-rule-panel">
+      {% if v2_game.versions %}
+      <div class="v2-version-choice" role="group" aria-label="Choose game version">
+        <span>Version</span>
+        <div>
+          {% for version in v2_game.versions %}
+          <button class="v2-generic-version-toggle{% if loop.first %} active{% endif %}" type="button" data-version="{{ version }}">{{ version | replace("-", " ") | title }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <div class="v2-version-choice">
+        <span>Version</span>
+        <div><button class="v2-generic-version-toggle active" type="button" data-version="{{ v2_game.id }}">Pending data</button></div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if v2_game.id == "heartgold-soulsilver" %}
+  <section class="v2-hgss-identity-strip" aria-label="HeartGold and SoulSilver guide identity">
+    <div>
+      <span>Johto Journey Log</span>
+      <strong>Time-of-day routes, tree hunts, Kanto return, and the road to Red.</strong>
+    </div>
+    <div class="v2-hgss-identity-chips">
+      <span>Morning / Day / Night</span>
+      <span>Headbutt + Contest</span>
+      <span>Johto to Kanto</span>
+      <span>Mt. Silver finish</span>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if v2_game.id in ["emerald", "ruby-sapphire", "oras"] %}
+  <section class="v2-hoenn-identity-strip" aria-label="{{ v2_game.name }} guide identity">
+    <div>
+      <span>{% if v2_game.id == "emerald" %}Hoenn Frontier Log{% elif v2_game.id == "oras" %}Hoenn Remake Field Guide{% else %}Hoenn Route Ledger{% endif %}</span>
+      <strong>
+        {% if v2_game.id == "emerald" %}
+        Weather routes, sea cleanup, double-villain story flow, and Frontier-ready postgame planning.
+        {% elif v2_game.id == "oras" %}
+        DexNav revisits, soaring cleanup, Mirage Spots, Primal story flow, and Delta Episode finish.
+        {% else %}
+        Version villains, fossil branches, sea routes, mascot legendaries, and late Hoenn puzzle cleanup.
+        {% endif %}
+      </strong>
+    </div>
+    <div class="v2-hoenn-identity-chips">
+      <span>{% if v2_game.id == "oras" %}DexNav + Soaring{% else %}Weather + Sea Routes{% endif %}</span>
+      <span>{% if v2_game.id == "ruby-sapphire" %}Magma / Aqua split{% elif v2_game.id == "emerald" %}Battle Frontier finish{% else %}Delta Episode finish{% endif %}</span>
+      <span>Fossils + statics</span>
+      <span>{% if v2_game.id == "oras" %}Mirage Spot cleanup{% else %}Legendary route cleanup{% endif %}</span>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if v2_game.id == "legends-za" %}
+  <section class="v2-za-final-strip" aria-label="Legends Z-A flagship guide overview">
+    <article class="v2-za-final-card">
+      <span>Mission-first guide</span>
+      <strong>Use Z-A like a campaign log, not a loose Wild Zone checklist.</strong>
+      <p>The guide now follows the mission chain and rank promotions so each chapter answers what you should clear before the next real story wall.</p>
+    </article>
+    <article class="v2-za-final-card">
+      <span>Three active lanes</span>
+      <strong>Mission progress, Royale prep, and catch planning stay visible together.</strong>
+      <p>Wild Zones still matter, but they now sit under the rank and story flow instead of replacing it.</p>
+    </article>
+    <article class="v2-za-final-card">
+      <span>Clean finish</span>
+      <strong>Main missions, postgame missions, and DLC stay separated on purpose.</strong>
+      <p>Finish the real Lumiose story first, then decide when to open Mega Dimension and Mystery Gift side-mission cleanup.</p>
+    </article>
+  </section>
+  {% endif %}
+
+  <section class="v2-stat-grid" aria-label="Generic V2 progress summary">
+    {% if v2_game.id == "platinum" %}
+    <div class="v2-platinum-summary" aria-label="Platinum quick summary">
+      <article class="v2-platinum-summary-card">
+        <span>Current location</span>
+        <strong id="v2-platinum-current-location">Twinleaf / Starter</strong>
+        <small>Active chapter in the guide</small>
+      </article>
+      <article class="v2-platinum-summary-card">
+        <span>Catch progress</span>
+        <strong id="v2-platinum-catch-progress">0/{{ v2_game.entry_count }}</strong>
+        <small id="v2-platinum-catch-progress-copy">Regional Pokédex progress</small>
+        <div class="v2-platinum-progress-bar" aria-hidden="true">
+          <span id="v2-platinum-catch-progress-fill"></span>
+        </div>
+      </article>
+      <article class="v2-platinum-summary-card">
+        <span>Gym badges</span>
+        <strong id="v2-platinum-badge-progress">0/8</strong>
+        <small class="v2-platinum-badge-copy">Tap each badge as you earn it</small>
+        <div class="v2-platinum-badge-grid" role="group" aria-label="Sinnoh gym badges">
+          <button class="v2-platinum-badge v2-platinum-badge-coal" type="button" data-platinum-badge="coal" data-badge-index="0" aria-pressed="false" aria-label="Coal Badge">
+            <span class="v2-platinum-badge-emoji" aria-hidden="true">🪙</span>
+          </button>
+          <button class="v2-platinum-badge v2-platinum-badge-forest" type="button" data-platinum-badge="forest" data-badge-index="1" aria-pressed="false" aria-label="Forest Badge">
+            <span class="v2-platinum-badge-emoji" aria-hidden="true">🍃</span>
+          </button>
+          <button class="v2-platinum-badge v2-platinum-badge-cobble" type="button" data-platinum-badge="cobble" data-badge-index="2" aria-pressed="false" aria-label="Cobble Badge">
+            <span class="v2-platinum-badge-emoji" aria-hidden="true">🧱</span>
+          </button>
+          <button class="v2-platinum-badge v2-platinum-badge-fen" type="button" data-platinum-badge="fen" data-badge-index="3" aria-pressed="false" aria-label="Fen Badge">
+            <span class="v2-platinum-badge-emoji" aria-hidden="true">💧</span>
+          </button>
+          <button class="v2-platinum-badge v2-platinum-badge-relic" type="button" data-platinum-badge="relic" data-badge-index="4" aria-pressed="false" aria-label="Relic Badge">
+            <span class="v2-platinum-badge-emoji" aria-hidden="true">🔮</span>
+          </button>
+          <button class="v2-platinum-badge v2-platinum-badge-mine" type="button" data-platinum-badge="mine" data-badge-index="5" aria-pressed="false" aria-label="Mine Badge">
+            <span class="v2-platinum-badge-emoji" aria-hidden="true">⚙️</span>
+          </button>
+          <button class="v2-platinum-badge v2-platinum-badge-icicle" type="button" data-platinum-badge="icicle" data-badge-index="6" aria-pressed="false" aria-label="Icicle Badge">
+            <span class="v2-platinum-badge-emoji" aria-hidden="true">❄️</span>
+          </button>
+          <button class="v2-platinum-badge v2-platinum-badge-beacon" type="button" data-platinum-badge="beacon" data-badge-index="7" aria-pressed="false" aria-label="Beacon Badge">
+            <span class="v2-platinum-badge-emoji" aria-hidden="true">⚡</span>
+          </button>
+        </div>
+      </article>
+    </div>
+    {% endif %}
+    <div class="v2-stat-card v2-stat-card-setup">
+      <span>Selected version</span>
+      <strong id="v2-generic-version">{{ (v2_game.versions[0] if v2_game.versions else v2_game.id) | replace("-", " ") | title }}</strong>
+      <small>Local V2 setting only</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Caught</span>
+      <strong id="v2-generic-caught">0/{{ v2_game.entry_count }}</strong>
+      <small>Saved in this browser</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Starter</span>
+      <strong id="v2-generic-starter">Pending</strong>
+      <small>Optional V2 choice</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Visible</span>
+      <strong id="v2-generic-visible">{{ v2_game.entry_count }}</strong>
+      <small>After search/filter</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Guide steps</span>
+      <strong id="v2-generic-guide-count">0/{{ generic_guide_stats.total_steps }}</strong>
+      <small>{% if v2_game.id == "legends-za" %}Z-A guide checklist{% elif v2_game.id in ["red-blue", "yellow", "lets-go"] %}Kanto guide checklist{% elif v2_game.id in ["gold-silver", "crystal", "heartgold-soulsilver"] %}Johto guide checklist{% elif v2_game.id in ["emerald", "ruby-sapphire", "oras"] %}Hoenn guide checklist{% elif v2_game.id in ["diamond-pearl", "platinum", "bdsp"] %}Sinnoh guide checklist{% elif v2_game.id in ["black-white", "black2-white2"] %}Unova guide checklist{% elif v2_game.id in ["sun-moon", "usum"] %}Alola guide checklist{% elif v2_game.id == "x-y" %}Kalos guide checklist{% elif v2_game.id == "sword-shield" %}Galar guide checklist{% elif v2_game.id == "legends-arceus" %}Hisui guide checklist{% elif v2_game.id == "scarlet-violet" %}Paldea guide checklist{% else %}Guide checklist{% endif %}</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Items</span>
+      <strong id="v2-generic-item-count">0/{{ generic_guide_stats.total_items }}</strong>
+      <small>Guide reminders</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Important pickups</span>
+      <strong>{{ generic_guide_flag_counts.important_items }}</strong>
+      <small>Core items and route tools</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>One-time calls</span>
+      <strong>{{ generic_guide_flag_counts.one_time_items }}</strong>
+      <small>Choices, gifts, legendaries, and branches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Secrets</span>
+      <strong>{{ generic_guide_flag_counts.secret_items }}</strong>
+      <small>Hidden, timed, or side-system reminders</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Special targets</span>
+      <strong>{{ generic_guide_flag_counts.flagged_targets }}</strong>
+      <small>Guide targets with special handling</small>
+    </div>
+    {% if v2_game.id in ["red-blue", "yellow"] %}
+    <div class="v2-stat-card">
+      <span>Kanto progress</span>
+      <strong id="v2-kanto-classic-progress">0/0</strong>
+      <small>Main classic Kanto catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Version targets</span>
+      <strong id="v2-kanto-classic-version-progress">0/0</strong>
+      <small>Version-route cleanup</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Gift / static</span>
+      <strong id="v2-kanto-classic-static-progress">0/0</strong>
+      <small>Starters, dojo, gifts, statics</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-kanto-classic-legendary-progress">0/0</strong>
+      <small>Bird trio and Mewtwo</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id in ["gold-silver", "crystal"] %}
+    <div class="v2-stat-card">
+      <span>Johto progress</span>
+      <strong id="v2-johto-classic-progress">0/0</strong>
+      <small>Main classic Johto catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Time targets</span>
+      <strong id="v2-johto-classic-time-progress">0/0</strong>
+      <small>Morning, day, and night cleanup</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Contest / static</span>
+      <strong id="v2-johto-classic-static-progress">0/0</strong>
+      <small>Contest, gifts, roamers, statics</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-johto-classic-legendary-progress">0/0</strong>
+      <small>Box legends, roamers, late cleanup</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id == "heartgold-soulsilver" %}
+    <div class="v2-stat-card">
+      <span>Johto progress</span>
+      <strong id="v2-hgss-johto-progress">0/0</strong>
+      <small>Updated Johto #001-#206</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Kanto / postgame</span>
+      <strong id="v2-hgss-kanto-progress">0/0</strong>
+      <small>Updated Johto #207-#256</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Version blocked</span>
+      <strong id="v2-hgss-version-blocked">0</strong>
+      <small>Hidden from your selected version</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Headbutt targets</span>
+      <strong id="v2-hgss-headbutt-progress">0/0</strong>
+      <small>Tree encounter cleanup</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Time targets</span>
+      <strong id="v2-hgss-time-progress">0/0</strong>
+      <small>Morning / day / night reminders</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id in ["emerald", "ruby-sapphire", "oras"] %}
+    <div class="v2-stat-card">
+      <span>Hoenn progress</span>
+      <strong id="v2-emerald-hoenn-progress">0/0</strong>
+      <small>Main Hoenn dex catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Weather routes</span>
+      <strong id="v2-emerald-weather-progress">0/0</strong>
+      <small>Desert, Route 119, sea-route notes</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Fossil / static</span>
+      <strong id="v2-emerald-static-progress">0/0</strong>
+      <small>Fossils, gifts, Kecleon, weather reward</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-emerald-legendary-progress">0/0</strong>
+      <small>Weather trio, Regis, roamers, events</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id in ["diamond-pearl", "platinum", "bdsp"] %}
+    <div class="v2-stat-card">
+      <span>Sinnoh progress</span>
+      <strong id="v2-platinum-sinnoh-progress">0/0</strong>
+      <small>Main Sinnoh dex catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Honey targets</span>
+      <strong id="v2-platinum-honey-progress">0/0</strong>
+      <small>Honey Tree cleanup</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Marsh / static</span>
+      <strong id="v2-platinum-static-progress">0/0</strong>
+      <small>Great Marsh, gifts, and statics</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-platinum-legendary-progress">0/0</strong>
+      <small>{% if v2_game.id == "diamond-pearl" %}Box legend and postgame{% elif v2_game.id == "bdsp" %}Ramanas Park and postgame{% else %}Distortion World and postgame{% endif %}</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id in ["black-white", "black2-white2"] %}
+    <div class="v2-stat-card">
+      <span>Unova progress</span>
+      <strong id="v2-bw-unova-progress">0/0</strong>
+      <small>Main Unova dex catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Season targets</span>
+      <strong id="v2-bw-season-progress">0/0</strong>
+      <small>Seasonal route cleanup</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Special grass</span>
+      <strong id="v2-bw-shaking-progress">0/0</strong>
+      <small>Shaking grass catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-bw-legendary-progress">0/0</strong>
+      <small>Story dragon and postgame</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id in ["sun-moon", "usum"] %}
+    <div class="v2-stat-card">
+      <span>Alola progress</span>
+      <strong id="v2-alola-progress">0/0</strong>
+      <small>Main island-route catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Island Scan</span>
+      <strong id="v2-alola-scan-progress">0/0</strong>
+      <small>Island Scan and side catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Gift / static</span>
+      <strong id="v2-alola-static-progress">0/0</strong>
+      <small>Trials, gifts, and special encounters</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-alola-legendary-progress">0/0</strong>
+      <small>{% if v2_game.id == "usum" %}Necrozma, Tapus, and wormholes{% else %}Tapus and Ultra Beasts{% endif %}</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id == "x-y" %}
+    <div class="v2-stat-card">
+      <span>Kalos progress</span>
+      <strong id="v2-xy-progress">0/0</strong>
+      <small>Main Kalos dex catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Mega planning</span>
+      <strong id="v2-xy-mega-progress">0/0</strong>
+      <small>Mega-linked targets</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Fossil / static</span>
+      <strong id="v2-xy-static-progress">0/0</strong>
+      <small>Fossils, gifts, and one-offs</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-xy-legendary-progress">0/0</strong>
+      <small>Box legend, Zygarde, Mewtwo</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id == "sword-shield" %}
+    <div class="v2-stat-card">
+      <span>Galar progress</span>
+      <strong id="v2-swsh-progress">0/0</strong>
+      <small>Main Galar dex catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Wild Area</span>
+      <strong id="v2-swsh-wild-progress">0/0</strong>
+      <small>Weather and Wild Area cleanup</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Fossil / static</span>
+      <strong id="v2-swsh-static-progress">0/0</strong>
+      <small>Fossils, gifts, and one-offs</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-swsh-legendary-progress">0/0</strong>
+      <small>Zacian, Zamazenta, Eternatus</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id == "legends-arceus" %}
+    <div class="v2-stat-card">
+      <span>Hisui progress</span>
+      <strong id="v2-pla-progress">0/0</strong>
+      <small>Main research catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Research tasks</span>
+      <strong id="v2-pla-research-progress">0/0</strong>
+      <small>Task-driven targets</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Distortions / special</span>
+      <strong id="v2-pla-distortion-progress">0/0</strong>
+      <small>Distortions and one-offs</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-pla-legendary-progress">0/0</strong>
+      <small>Late story, plates, Arceus</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id == "lets-go" %}
+    <div class="v2-stat-card">
+      <span>Kanto progress</span>
+      <strong id="v2-lg-progress">0/0</strong>
+      <small>Main Let's Go catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Version targets</span>
+      <strong id="v2-lg-version-progress">0/0</strong>
+      <small>Pikachu vs Eevee split</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Gift / static</span>
+      <strong id="v2-lg-static-progress">0/0</strong>
+      <small>Partner, gifts, dojo, trades</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Legendary cleanup</span>
+      <strong id="v2-lg-legendary-progress">0/0</strong>
+      <small>Bird trio and Mewtwo</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id == "scarlet-violet" %}
+    <div class="v2-stat-card">
+      <span>Paldea progress</span>
+      <strong id="v2-sv-progress">0/0</strong>
+      <small>Main Paldea catches</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Recommended catches</span>
+      <strong id="v2-sv-open-progress">0/0</strong>
+      <small>Selected partners along the route</small>
+    </div>
+    {% endif %}
+    {% if v2_game.id == "legends-za" %}
+    <div class="v2-stat-card v2-stat-card-setup">
+      <span>Verified targets</span>
+      <strong id="v2-za-verified">0</strong>
+      <small>Confirmed in your save</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Wild Zone review</span>
+      <strong id="v2-za-wild-zone">0/0</strong>
+      <small>Early target notes</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Mega planning</span>
+      <strong id="v2-za-mega">0/0</strong>
+      <small>Mega/DLC targets checked</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Field notes</span>
+      <strong id="v2-za-notes">0/{{ generic_guide_chapters | length }}</strong>
+      <small>Chapters with notes</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Location notes</span>
+      <strong id="v2-za-location-notes">0</strong>
+      <small>Target details captured</small>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="v2-guide v2-tab-panel active" data-v2-generic-panel="guide" aria-label="{{ v2_game.name }} V2 guide draft">
+    <div class="v2-guide-head">
+      <div>
+        <p class="v2-kicker">{% if v2_game.id in ["legends-za", "red-blue", "yellow", "gold-silver", "crystal", "heartgold-soulsilver", "emerald", "ruby-sapphire", "oras", "diamond-pearl", "platinum", "bdsp", "black-white", "black2-white2", "sun-moon", "usum", "x-y", "sword-shield", "legends-arceus", "scarlet-violet", "lets-go"] %}Playable guide draft{% else %}Guide draft{% endif %}</p>
+        <h2>{{ v2_game.name }} guide path</h2>
+        {% if v2_game.id == "legends-za" %}
+        <p>This Z-A guide uses confirmed mechanics and Pokémon planning targets first. Exact Wild Zone locations and timing should be refined as you verify them during your save.</p>
+        {% elif v2_game.id == "red-blue" %}
+        <p>This Red/Blue guide now follows classic Kanto properly: version exclusives, Safari cleanup, dojo choices, city arcs, and late legendary routes.</p>
+        {% elif v2_game.id == "yellow" %}
+        <p>This Yellow guide now follows its own anime-flavored Kanto rhythm: Partner Pikachu, gift starters, city arcs, Safari cleanup, and late legendary routes.</p>
+        {% elif v2_game.id == "gold-silver" %}
+        <p>This Gold/Silver guide now follows classic Johto properly: day-night routes, early Johto texture, roamers, the Johto-to-Kanto split, and Red cleanup.</p>
+        {% elif v2_game.id == "crystal" %}
+        <p>This Crystal guide now follows its own Johto rhythm: day-night routes, Suicune story focus, Johto-to-Kanto structure, and Red cleanup.</p>
+        {% elif v2_game.id == "emerald" %}
+        <p>This Emerald guide now follows Hoenn's actual play rhythm: early routes, ferry arcs, weather routes, fossils, sea cleanup, the weather trio story, and Battle Frontier-style postgame notes.</p>
+        {% elif v2_game.id == "ruby-sapphire" %}
+        <p>This Ruby/Sapphire guide now follows the Hoenn version split properly: early routes, ferry arcs, fossil choices, weather routes, Team Magma or Aqua story flow, mascot legendaries, and Regi/Lati cleanup.</p>
+        {% elif v2_game.id == "oras" %}
+        <p>This ORAS guide now follows the Hoenn remake identity properly: early routes, DexNav revisits, fossils, Primal story flow, soaring, Mirage Spots, and Delta Episode cleanup.</p>
+        {% elif v2_game.id == "diamond-pearl" %}
+        <p>This Diamond/Pearl guide now follows Sinnoh's original rhythm: early routes, Honey Trees, Great Marsh cleanup, Mt. Coronet pressure, version legendary climax, and Battle Zone-aware postgame notes.</p>
+        {% elif v2_game.id == "bdsp" %}
+        <p>This BDSP guide now follows the remake Sinnoh rhythm: early routes, Honey Trees, Grand Underground revisits, Great Marsh cleanup, version legendary climax, and Ramanas Park-aware postgame notes.</p>
+        {% elif v2_game.id == "platinum" %}
+        <p>Use the walkthrough below to move through Platinum area by area.</p>
+        {% elif v2_game.id == "black-white" %}
+        <p>This Black/White guide now follows Unova's actual identity: new-only main-story dex flow, monkey gifts, seasons, shaking grass, version flavor, and story-dragon cleanup.</p>
+        {% elif v2_game.id == "black2-white2" %}
+        <p>This Black 2/White 2 guide now follows the sequel identity: bigger route pools, Habitat List-style cleanup, Hidden Grottos, sequel-only route hubs, and Nature Preserve-aware postgame notes.</p>
+        {% elif v2_game.id == "sun-moon" %}
+        <p>This Sun/Moon guide now follows Alola's actual rhythm: island trials, kahuna checkpoints, route cleanup, version-route flavor, and Ultra Beast-aware postgame notes.</p>
+        {% elif v2_game.id == "usum" %}
+        <p>This Ultra Sun/Ultra Moon guide now follows the Ultra Alola rhythm: altered trials, Mantine Surf notes, Ultra Necrozma prep, wormholes, and Tapu or Ultra Beast cleanup.</p>
+        {% elif v2_game.id == "x-y" %}
+        <p>This X/Y guide now follows Kalos' actual rhythm: early Central Kalos, fossil choice, Mega Evolution setup, city hubs, version routes, and Friend Safari-aware postgame notes.</p>
+        {% elif v2_game.id == "sword-shield" %}
+        <p>This Sword/Shield guide now follows Galar's actual rhythm: routes plus Wild Area loops, version gym flavor, fossil planning, Champion Cup prep, and wolf-legend cleanup.</p>
+        {% elif v2_game.id == "legends-arceus" %}
+        <p>This Legends: Arceus guide now follows Hisui's actual rhythm: survey zones, noble arcs, research-task passes, distortions, and postgame plates or Arceus cleanup.</p>
+      {% elif v2_game.id == "scarlet-violet" %}
+      <p>Follow the numbered stops for a recommended difficulty order. Each stop includes battle preparation, useful catches and nearby rewards. Suggested team levels are guidance, not entry requirements.</p>
+      {% if v2_game_profile.path_modes %}
+      <section class="v2-game-plan" aria-label="Recommended first-half Scarlet and Violet route">
+        <div class="v2-panel-title">
+          <span>Recommended first half</span>
+          <strong>Paldea route spine</strong>
+        </div>
+        <div class="v2-inline-choice v2-sv-path-choice" role="group" aria-label="Choose Paldea route style">
+          <span>Route style</span>
+          {% for mode in v2_game_profile.path_modes %}
+          <button class="v2-choice-toggle{% if loop.first %} active{% endif %}" type="button" data-sv-path-mode="{{ mode.id }}">{{ mode.label }}</button>
+          {% endfor %}
+        </div>
+        {% for mode in v2_game_profile.path_modes %}
+        <div class="v2-sv-path-plan{% if loop.first %} active{% endif %}" data-sv-path-panel="{{ mode.id }}">
+          <p class="v2-sv-path-summary">{{ mode.summary }}</p>
+          <div class="v2-game-plan-grid">
+            {% for beat in mode.beats %}
+            <article>
+              <strong>{{ beat.title }}</strong>
+              <p>{{ beat.detail }}</p>
+            </article>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </section>
+      {% endif %}
+      {% elif v2_game.id == "lets-go" %}
+      <p>This Let's Go guide now follows the Kanto remake identity: partner version choice, catch combos, visible overworld spawns, Safari cleanup, and postgame legendary routes.</p>
+        {% else %}
+        <p>This guide now uses {{ v2_game.name }} mechanics and theme rules as its draft structure. Exact route names, boss teams, items, and version blockers will keep getting deeper per game.</p>
+        {% endif %}
+      </div>
+      {% if v2_game.id == "legends-za" %}
+      <div class="v2-toolbar v2-za-zone-toolbar" role="toolbar" aria-label="Z-A Wild Zone filter">
+        <select id="v2-za-zone-filter" class="v2-type-filter" aria-label="Filter by Wild Zone">
+          <option value="all">All Wild Zones</option>
+          {% for zone_number in range(1, 21) %}
+          <option value="Wild Zone {{ zone_number }}">Wild Zone {{ zone_number }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% elif v2_game.id == "heartgold-soulsilver" %}
+      <div class="v2-toolbar v2-hgss-time-toolbar" role="toolbar" aria-label="HG/SS time-of-day filter">
+        <select id="v2-hgss-time-filter" class="v2-type-filter" aria-label="Filter HG/SS guide targets by time of day">
+          <option value="all">All times</option>
+          <option value="morning">Morning</option>
+          <option value="day">Day</option>
+          <option value="night">Night</option>
+        </select>
+      </div>
+      {% elif v2_game.id in ["emerald", "ruby-sapphire", "oras"] %}
+      <div class="v2-toolbar v2-hgss-time-toolbar" role="toolbar" aria-label="Emerald route lens">
+        <span class="v2-chip active" aria-disabled="true">Weather routes</span>
+        <span class="v2-chip active" aria-disabled="true">Fossils</span>
+        <span class="v2-chip active" aria-disabled="true">Sea cleanup</span>
+      </div>
+      {% endif %}
+    </div>
+    {% if v2_game.id == "legends-za" %}
+    <section class="v2-guide-panel v2-za-session-card" aria-label="Z-A session checklist">
+      <div class="v2-panel-title">
+        <span>Play session loop</span>
+        <strong id="v2-za-session-progress">0/6</strong>
+      </div>
+      <div class="v2-za-current-objective">
+        <div>
+          <span>Current objective</span>
+          <strong id="v2-za-current-objective-title">{{ generic_guide_chapters[0].title }}</strong>
+          <small id="v2-za-current-objective-next">Next: pick the checkpoint you are actively playing.</small>
+        </div>
+        <label>
+          <span>What are you doing right now?</span>
+          <input id="v2-za-current-objective-note"
+                 type="text"
+                 placeholder="Example: checking Wild Zone 2 before night Royale" />
+        </label>
+        <label>
+          <span>Current Wild Zone</span>
+          <select id="v2-za-current-zone" class="v2-type-filter" aria-label="Current Wild Zone">
+            <option value="all">No active zone</option>
+            {% for zone_number in range(1, 21) %}
+            <option value="Wild Zone {{ zone_number }}">Wild Zone {{ zone_number }}</option>
+            {% endfor %}
+          </select>
+          <small id="v2-za-current-zone-progress">No active zone selected.</small>
+        </label>
+      </div>
+      <div class="v2-za-export-row">
+        <button class="v2-button v2-button-ghost" type="button" id="v2-za-copy-notes">Copy Z-A notes</button>
+        <button class="v2-button v2-button-ghost" type="button" id="v2-za-open-current-zone">Open current zone</button>
+        <button class="v2-button v2-button-ghost" type="button" id="v2-za-open-current-zone-uncaught">Open uncaught in current zone</button>
+        <button class="v2-button v2-button-ghost" type="button" id="v2-za-clear-session">Clear session checklist</button>
+        <button class="v2-button v2-button-ghost" type="button" id="v2-za-hide-completed">Hide completed: off</button>
+        <small id="v2-za-copy-status">Copies current objective, chapter notes, verified targets, and caught targets.</small>
+      </div>
+      <div class="v2-za-session-grid">
+        <label><input type="checkbox" data-za-session-step="pick-starter" /><span>Pick starter</span></label>
+        <label><input type="checkbox" data-za-session-step="review-wild-zone" /><span>Review active Wild Zone</span></label>
+        <label><input type="checkbox" data-za-session-step="verify-targets" /><span>Verify new targets</span></label>
+        <label><input type="checkbox" data-za-session-step="add-notes" /><span>Add chapter notes</span></label>
+        <label><input type="checkbox" data-za-session-step="mark-caught" /><span>Mark caught in Pokédex</span></label>
+        <label><input type="checkbox" data-za-session-step="night-royale" /><span>Prep for night Royale</span></label>
+      </div>
+      <section class="v2-za-attention" aria-label="Z-A needs attention">
+        <div class="v2-panel-title">
+          <span>Needs attention</span>
+          <strong id="v2-za-attention-total">0 open</strong>
+        </div>
+        <div class="v2-za-attention-grid">
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="uncaught">
+            <span>Uncaught guide targets</span>
+            <strong id="v2-za-attention-uncaught">0</strong>
+            <small>Jump to Pokédex uncaught filter</small>
+            <em id="v2-za-attention-uncaught-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="needs-location">
+            <span>Missing location notes</span>
+            <strong id="v2-za-attention-locations">0</strong>
+            <small>Jump to targets needing location</small>
+            <em id="v2-za-attention-locations-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="needs-verification">
+            <span>Needs verification</span>
+            <strong id="v2-za-attention-verification">0</strong>
+            <small>Show unverified guide targets</small>
+            <em id="v2-za-attention-verification-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="field-notes">
+            <span>Field notes written</span>
+            <strong id="v2-za-attention-notes">0</strong>
+            <small>Review notes to convert later</small>
+            <em id="v2-za-attention-notes-list">No notes yet</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="current-zone-missing">
+            <span>Current zone uncaught</span>
+            <strong id="v2-za-missing-current-zone">0</strong>
+            <small>Jump to uncaught in active zone</small>
+            <em id="v2-za-missing-current-zone-list">Pick a Wild Zone</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="level-evolution">
+            <span>Level evolutions needed</span>
+            <strong id="v2-za-missing-level">0</strong>
+            <small>Jump to Level Evo filter</small>
+            <em id="v2-za-missing-level-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="stone-evolution">
+            <span>Stone evolutions needed</span>
+            <strong id="v2-za-missing-stone">0</strong>
+            <small>Jump to Stone Evo filter</small>
+            <em id="v2-za-missing-stone-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="trade-evolution">
+            <span>Trade evolutions needed</span>
+            <strong id="v2-za-missing-trade">0</strong>
+            <small>Jump to Trade Evo filter</small>
+            <em id="v2-za-missing-trade-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="friendship-evolution">
+            <span>Friendship/time needed</span>
+            <strong id="v2-za-missing-friendship">0</strong>
+            <small>Jump to Friendship filter</small>
+            <em id="v2-za-missing-friendship-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="postgame">
+            <span>Special/postgame needed</span>
+            <strong id="v2-za-missing-postgame">0</strong>
+            <small>Jump to Postgame filter</small>
+            <em id="v2-za-missing-postgame-list">None pending</em>
+          </button>
+        </div>
+      </section>
+      <section class="v2-za-attention v2-za-mega-panel" aria-label="Z-A Mega planning">
+        <div class="v2-panel-title">
+          <span>Mega planning</span>
+          <strong id="v2-za-mega-total">0 open</strong>
+        </div>
+        <div class="v2-za-attention-grid">
+          <button class="v2-za-attention-card" type="button" data-za-mega-jump="main">
+            <span>Main-game Mega lines</span>
+            <strong id="v2-za-mega-main">0</strong>
+            <small>Official Mega planning targets</small>
+            <em id="v2-za-mega-main-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-mega-jump="dlc">
+            <span>DLC/Postgame Mega lines</span>
+            <strong id="v2-za-mega-dlc">0</strong>
+            <small>Mega Dimension / postgame planning</small>
+            <em id="v2-za-mega-dlc-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-mega-jump="needs-source">
+            <span>Mega source needs note</span>
+            <strong id="v2-za-mega-source">0</strong>
+            <small>Missing location/source note</small>
+            <em id="v2-za-mega-source-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-mega-jump="caught-no-source">
+            <span>Caught, source not noted</span>
+            <strong id="v2-za-mega-caught-source">0</strong>
+            <small>Good candidates for field notes</small>
+            <em id="v2-za-mega-caught-source-list">None pending</em>
+          </button>
+        </div>
+      </section>
+      <section class="v2-za-attention v2-za-completion-panel" aria-label="Z-A completion review">
+        <div class="v2-panel-title">
+          <span>Completion review</span>
+          <strong id="v2-za-completion-ready">Review open</strong>
+        </div>
+        <div class="v2-za-attention-grid">
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="uncaught">
+            <span>Main Lumiose dex</span>
+            <strong id="v2-za-completion-main">0/0</strong>
+            <small>Main-game caught progress</small>
+            <em id="v2-za-completion-main-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="current-zone-missing">
+            <span>Wild Zone cleanup</span>
+            <strong id="v2-za-completion-wild">0 open</strong>
+            <small>Uncaught Wild Zone Pokémon</small>
+            <em id="v2-za-completion-wild-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="level-evolution">
+            <span>Evolution cleanup</span>
+            <strong id="v2-za-completion-evolution">0 open</strong>
+            <small>Level, stone, trade, friendship</small>
+            <em id="v2-za-completion-evolution-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-mega-jump="needs-source">
+            <span>Mega source review</span>
+            <strong id="v2-za-completion-mega">0 open</strong>
+            <small>Mega lines missing source notes</small>
+            <em id="v2-za-completion-mega-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="postgame">
+            <span>Special / postgame</span>
+            <strong id="v2-za-completion-postgame">0 open</strong>
+            <small>Legendaries and side missions</small>
+            <em id="v2-za-completion-postgame-list">None pending</em>
+          </button>
+          <button class="v2-za-attention-card" type="button" data-za-attention-jump="needs-location">
+            <span>Location notes</span>
+            <strong id="v2-za-completion-location">0 missing</strong>
+            <small>Guide targets needing notes</small>
+            <em id="v2-za-completion-location-list">None pending</em>
+          </button>
+        </div>
+      </section>
+      <div class="v2-za-verify-filter" role="toolbar" aria-label="Filter Z-A guide targets by verification">
+        <span>Target filter</span>
+        <button class="v2-chip active" type="button" data-za-target-filter="all">All targets</button>
+        <button class="v2-chip" type="button" data-za-target-filter="uncaught">Uncaught</button>
+        <button class="v2-chip" type="button" data-za-target-filter="caught">Caught</button>
+        <button class="v2-chip" type="button" data-za-target-filter="needs-verification">Needs verification</button>
+        <button class="v2-chip" type="button" data-za-target-filter="verified">Verified</button>
+      </div>
+      <div class="v2-za-verify-filter" role="toolbar" aria-label="Filter Z-A guide targets by playthrough scope">
+        <span>Playthrough scope</span>
+        <button class="v2-chip active" type="button" data-za-scope-filter="main">Main game only</button>
+        <button class="v2-chip" type="button" data-za-scope-filter="all">Include postgame/DLC</button>
+      </div>
+      <div class="v2-za-verify-filter" role="toolbar" aria-label="Filter Z-A guide targets by confidence">
+        <span>Confidence filter</span>
+        <button class="v2-chip active" type="button" data-za-confidence-filter="all">All confidence</button>
+        <button class="v2-chip" type="button" data-za-confidence-filter="official">Official</button>
+        <button class="v2-chip" type="button" data-za-confidence-filter="location-tbd">Location TBD</button>
+        <button class="v2-chip" type="button" data-za-confidence-filter="mega">Mega planning</button>
+        <button class="v2-chip" type="button" data-za-confidence-filter="dlc">DLC/Postgame</button>
+      </div>
+      <div class="v2-za-confidence-legend" aria-label="Z-A data confidence legend">
+        <span><strong>Location sourced</strong> means the Wild Zone listing is filled in.</span>
+        <span><strong>Verify in save</strong> means keep a note until your playthrough confirms timing/source.</span>
+        <span><strong>Official Mega planning</strong> means the line matters for Mega tracking, but the exact Mega Stone/source may still need a note.</span>
+        <span><strong>DLC/Postgame</strong> is hidden from main-game guide scope unless you include postgame/DLC.</span>
+      </div>
+    </section>
+    {% endif %}
+    <div class="v2-guide-layout">
+      <aside class="v2-guide-sidebar">
+        {% if v2_game.id == "platinum" and generic_guide_nav_groups %}
+        <nav class="v2-timeline v2-platinum-accordion" aria-label="{{ v2_game.name }} guide checkpoints">
+          {% for group in generic_guide_nav_groups %}
+          <section class="v2-route-group{% if loop.first %} is-open{% endif %}" data-guide-group="{{ group.id }}">
+            <button class="v2-route-group-summary"
+                    type="button"
+                    data-guide-group-toggle="{{ group.id }}"
+                    aria-expanded="{{ 'true' if loop.first else 'false' }}">
+              <span class="v2-route-group-copy">
+                <strong>{{ group.label }}</strong>
+                <small>{{ group.summary }}</small>
+              </span>
+              <span class="v2-route-group-meta">
+                <em data-guide-group-status="{{ group.id }}">Active stage</em>
+                <small data-guide-group-progress="{{ group.id }}">0/0 steps</small>
+              </span>
+            </button>
+            <div class="v2-route-group-list" data-guide-group-panel="{{ group.id }}">
+              {% for chapter in group.chapters %}
+              <button class="v2-timeline-step{% if chapter.id == generic_guide_chapters[0].id %} active{% endif %}"
+                      type="button"
+                      data-generic-guide-button="{{ chapter.id }}"
+                      data-generic-guide-group="{{ group.id }}">
+                <span class="v2-timeline-index">{{ loop.index }}</span>
+                <span>
+                  <strong>{{ chapter.title }}</strong>
+                  <small>{{ chapter.stage }}</small>
+                </span>
+                <em data-generic-guide-progress="{{ chapter.id }}">0/{{ chapter.guide_steps | length }}</em>
+              </button>
+              {% endfor %}
+            </div>
+          </section>
+          {% endfor %}
+        </nav>
+        {% else %}
+        <nav class="v2-timeline" aria-label="{{ v2_game.name }} guide checkpoints">
+          {% for chapter in generic_guide_chapters %}
+          <button class="v2-timeline-step{% if loop.first %} active{% endif %}"
+                  type="button"
+                  data-generic-guide-button="{{ chapter.id }}">
+            <span class="v2-timeline-index">{{ loop.index }}</span>
+            <span>
+              <strong>{{ chapter.title }}</strong>
+              <small>{{ chapter.stage }}</small>
+            </span>
+            <em data-generic-guide-progress="{{ chapter.id }}">0/{{ chapter.guide_steps | length }}</em>
+          </button>
+          {% endfor %}
+        </nav>
+        {% endif %}
+      </aside>
+      <div class="v2-chapter-stack">
+        {% for chapter in generic_guide_chapters %}
+        <article class="v2-chapter{% if loop.first %} active{% endif %}"
+                 {% if v2_game.id == "platinum" and ('postgame' in chapter.id or 'Postgame' in chapter.stage) %}data-platinum-postgame="true"{% endif %}
+                 {% if v2_game.id == "scarlet-violet" and chapter.chapter_focus %}data-sv-chapter-focus="{{ chapter.chapter_focus }}"{% endif %}
+                 data-generic-guide-panel="{{ chapter.id }}">
+          <div class="v2-chapter-topline">
+            <span>{{ chapter.stage }}</span>
+            {% if chapter.boss %}
+            <strong>{{ chapter.boss.title }}: {{ chapter.boss.name }} · {{ chapter.boss.location }}</strong>
+            {% else %}
+            <strong>{% if v2_game.id == "legends-za" %}Z-A mission guide draft{% elif v2_game.id == "red-blue" %}Red/Blue guide draft{% elif v2_game.id == "yellow" %}Yellow guide draft{% elif v2_game.id == "gold-silver" %}Gold/Silver guide draft{% elif v2_game.id == "crystal" %}Crystal guide draft{% elif v2_game.id == "heartgold-soulsilver" %}HG/SS guide draft{% elif v2_game.id == "emerald" %}Emerald guide draft{% elif v2_game.id == "ruby-sapphire" %}Ruby/Sapphire guide draft{% elif v2_game.id == "oras" %}ORAS guide draft{% elif v2_game.id == "sun-moon" %}Sun/Moon guide draft{% elif v2_game.id == "usum" %}USUM guide draft{% elif v2_game.id == "x-y" %}X/Y guide draft{% elif v2_game.id == "sword-shield" %}Sword/Shield guide draft{% elif v2_game.id == "legends-arceus" %}Legends Arceus guide draft{% elif v2_game.id == "scarlet-violet" %}Scarlet/Violet guide draft{% elif v2_game.id == "lets-go" %}Let's Go guide draft{% else %}Guide draft{% endif %}</strong>
+            {% endif %}
+          </div>
+          {% if v2_game.id == "scarlet-violet" and chapter.chapter_focus %}
+          <div class="v2-sv-chapter-focus">{{ chapter.chapter_focus | replace('-', ' ') | title }}</div>
+          {% endif %}
+          <h3>{{ chapter.title }}</h3>
+          <p>{{ chapter.subtitle }}</p>
+          {% if v2_game.id == "scarlet-violet" and loop.first %}
+          <p>Follow this recommended difficulty order across gyms, Titans and Team Star. Enemies do not scale to your level. This base-game guide highlights useful catches and dependable nearby rewards; it is not a list of every spawn or overworld item. DLC is excluded.</p>
+          {% endif %}
+          {% if chapter.next_stop %}
+          <p><strong>Next stop:</strong> {{ chapter.next_stop.title }}</p>
+          {% endif %}
+          {% if chapter.sources %}
+          <details class="v2-guide-accordion">
+            <summary class="v2-guide-accordion-summary">Area maps and sources</summary>
+            <div class="v2-guide-accordion-body">
+              <ul>
+                {% for source in chapter.sources %}
+                <li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.label }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </details>
+          {% endif %}
+          {% set objective = chapter.primary_goal if chapter.primary_goal else chapter.checkpoint_callout %}
+          {% if objective %}
+          <section class="v2-guide-objective-banner" aria-label="{{ chapter.title }} primary goal">
+            <div class="v2-guide-objective-label">{{ objective.label or 'Primary Goal' }}</div>
+            <div class="v2-guide-objective-copy">
+              <strong>{{ objective.title }}</strong>
+              <p>{{ objective.detail }}</p>
+            </div>
+          </section>
+          {% endif %}
+          {% if chapter.school_visit %}
+          <aside class="sv-school-visit"><strong>Academy return visit</strong><p>{{ chapter.school_visit }}</p></aside>
+          {% endif %}
+          {% if chapter.battle_briefings %}
+          {% include "sv_battles.html" %}
+          {% endif %}
+          {% if chapter.academy %}
+          {% include "sv_academy.html" %}
+          {% endif %}
+          {% if chapter.guide_steps and not chapter.academy %}
+          <section class="v2-guide-panel v2-guide-walkthrough-panel" aria-label="{{ chapter.title }} walkthrough">
+            <div class="v2-panel-title">
+              <span>Walkthrough</span>
+              <strong data-generic-local-guide-count="{{ chapter.id }}">0/{{ chapter.guide_steps | length }}</strong>
+            </div>
+            <div class="v2-guide-walkthrough-list">
+              {% for step in chapter.guide_steps %}
+              <label class="v2-guide-walkthrough-step"
+                     data-generic-guide-step-card="{{ step.id }}"
+                     {% if step.preferred_modes %}data-sv-preferred-modes="{{ step.preferred_modes | join(',') }}"{% endif %}>
+                <span class="v2-guide-walkthrough-index">{{ loop.index }}</span>
+                <input type="checkbox"
+                       class="v2-generic-guide-check"
+                       data-generic-guide-step="{{ step.id }}"
+                       data-generic-guide-chapter="{{ chapter.id }}"
+                       data-requires-generic-starter="{{ 'true' if step.requires_starter or step.id == 'start-starter' else 'false' }}" />
+                <span class="v2-guide-walkthrough-copy">
+                  <em>{{ step.category }}</em>
+                  <strong>{{ step.label }}</strong>
+                  <small>{{ step.detail }}</small>
+                </span>
+              </label>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+          {% if chapter.strategy_callout %}
+          <section class="v2-guide-callout v2-guide-callout-strategy" aria-label="{{ chapter.title }} strategy callout">
+            <div class="v2-panel-title">
+              <span>{{ chapter.strategy_callout.label or 'Strategy Callout' }}</span>
+              <strong>Pro tip</strong>
+            </div>
+            <div class="v2-guide-callout-card">
+              <strong>{{ chapter.strategy_callout.title }}</strong>
+              <p>{{ chapter.strategy_callout.detail }}</p>
+              {% if chapter.strategy_callout.bullets %}
+              <ul class="v2-guide-callout-list">
+                {% for bullet in chapter.strategy_callout.bullets %}
+                <li>{{ bullet }}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </div>
+          </section>
+          {% endif %}
+          {% if chapter.secrets_callout %}
+          <section class="v2-guide-callout v2-guide-callout-secrets" aria-label="{{ chapter.title }} area secrets">
+            <div class="v2-panel-title">
+              <span>{{ chapter.secrets_callout.label or 'Area Secrets' }}</span>
+              <strong>Side quests</strong>
+            </div>
+            <div class="v2-guide-callout-card">
+              <strong>{{ chapter.secrets_callout.title }}</strong>
+              <p>{{ chapter.secrets_callout.detail }}</p>
+              {% if chapter.secrets_callout.bullets %}
+              <ul class="v2-guide-callout-list">
+                {% for bullet in chapter.secrets_callout.bullets %}
+                <li>{{ bullet }}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </div>
+          </section>
+          {% endif %}
+          {% if chapter.lane_pills %}
+          <section class="v2-guide-lane-pills{% if v2_game.id == 'scarlet-violet' %} v2-sv-lane-pills{% elif v2_game.id == 'heartgold-soulsilver' %} v2-hgss-lane-pills{% endif %}" aria-label="{{ chapter.title }} route lanes">
+            {% for lane in chapter.lane_pills %}
+            <article class="v2-guide-lane-pill{% if v2_game.id == 'scarlet-violet' %} v2-sv-lane-pill{% elif v2_game.id == 'heartgold-soulsilver' %} v2-hgss-lane-pill{% endif %}"
+                     {% if lane.preferred_modes %}data-sv-preferred-modes="{{ lane.preferred_modes | join(',') }}"{% endif %}>
+              <strong>{{ lane.label }}</strong>
+              <small>{{ lane.detail }}</small>
+            </article>
+            {% endfor %}
+          </section>
+          {% endif %}
+          {% if chapter.area_clusters %}
+          <section class="v2-guide-area-clusters{% if v2_game.id == 'scarlet-violet' %} v2-sv-area-clusters{% elif v2_game.id == 'heartgold-soulsilver' %} v2-hgss-area-clusters{% endif %}" aria-label="{{ chapter.title }} area clusters">
+            {% for area in chapter.area_clusters %}
+            <article class="v2-guide-area-card{% if v2_game.id == 'scarlet-violet' %} v2-sv-area-card{% elif v2_game.id == 'heartgold-soulsilver' %} v2-hgss-area-card{% endif %}">
+              <strong>{{ area.title }}</strong>
+              <p>{{ area.detail }}</p>
+            </article>
+            {% endfor %}
+          </section>
+          {% endif %}
+          {% if v2_game.id == "scarlet-violet" and chapter.path_notes %}
+          {% for mode_id, note in chapter.path_notes.items() %}
+          <section class="v2-sv-path-note{% if loop.first %} active{% endif %}" data-sv-path-note="{{ mode_id }}">
+            <strong>{{ note.title }}</strong>
+            <p>{{ note.detail }}</p>
+          </section>
+          {% endfor %}
+          {% endif %}
+          {% set chapter_bosses = chapter.bosses if chapter.bosses else ([chapter.boss] if chapter.boss else []) %}
+          {% for boss in chapter_bosses if v2_game.id in ["red-blue", "yellow", "gold-silver", "crystal", "heartgold-soulsilver", "emerald", "ruby-sapphire", "oras", "diamond-pearl", "platinum", "bdsp", "black-white", "black2-white2", "sun-moon", "usum", "x-y", "sword-shield", "scarlet-violet", "lets-go", "legends-za"] %}
+          {% if v2_game.id == "legends-za" %}
+          <section class="v2-gym-helper v2-za-boss-helper" aria-label="{{ boss.name }} battle plan">
+            <div class="v2-panel-title">
+              <span>{{ boss.title }} battle plan</span>
+              <strong>{{ boss.name }} · {{ boss.location }}</strong>
+            </div>
+            <p class="v2-za-boss-summary">Use this as the chapter's real prep target. The mission steps above should feed this fight directly.</p>
+            <div class="v2-za-boss-plan">
+              {% for note in boss.battle_plan %}
+              <article class="v2-za-boss-note">
+                <strong>Prep {{ loop.index }}</strong>
+                <small>{{ note }}</small>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+          {% else %}
+          <section class="v2-gym-helper" data-generic-gym-helper="{{ boss.name | lower }}" aria-label="{{ boss.name }} battle helper">
+            <div class="v2-panel-title">
+              <span>{{ boss.title }} battle helper</span>
+              <strong>{{ boss.types | join(' / ') | title }}</strong>
+            </div>
+            <p data-generic-gym-summary="{{ boss.name | lower }}">Mark Pokémon caught in the Pokédex and this will suggest the best options you already have.</p>
+            <div class="v2-gym-picks" data-generic-gym-picks="{{ boss.name | lower }}">
+              <span>No caught recommendations yet.</span>
+            </div>
+            <small data-generic-gym-fallback="{{ boss.name | lower }}">Catch or mark relevant team members to unlock matchup suggestions.</small>
+          </section>
+          {% endif %}
+          {% endfor %}
+          {% if v2_game.id == "legends-za" and chapter.promotion_fights %}
+          <section class="v2-guide-panel v2-za-fight-panel" aria-label="{{ chapter.title }} promotion fights">
+            <div class="v2-panel-title">
+              <span>Promotion fights</span>
+              <strong>{{ chapter.promotion_fights | length }}</strong>
+            </div>
+            <div class="v2-za-fight-grid">
+              {% for fight in chapter.promotion_fights %}
+              <article class="v2-za-fight-card">
+                <div class="v2-za-fight-topline">
+                  <div>
+                    <span>{{ fight.rank }}</span>
+                    <strong>{{ fight.name }}</strong>
+                  </div>
+                  {% if fight.ticket_points %}
+                  <em>{{ fight.ticket_points }}</em>
+                  {% endif %}
+                </div>
+                <div class="v2-za-fight-columns">
+                  <div class="v2-za-fight-team">
+                    <span>Opponent team</span>
+                    <ul>
+                      {% for member in fight.team %}
+                      <li>{{ member }}</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                  <div class="v2-za-fight-counters">
+                    <span>Best counters</span>
+                    <div class="v2-za-fight-counter-chips">
+                      {% for counter in fight.counters %}
+                      <small>{{ counter }}</small>
+                      {% endfor %}
+                    </div>
+                    <p>{{ fight.strategy }}</p>
+                  </div>
+                </div>
+                <section class="v2-gym-helper v2-za-fight-helper" data-generic-gym-helper="{{ fight.name | lower }}" aria-label="{{ fight.name }} caught roster helper">
+                  <div class="v2-panel-title">
+                    <span>{{ fight.name }} live roster helper</span>
+                    <strong>Best caught options</strong>
+                  </div>
+                  <p data-generic-gym-summary="{{ fight.name | lower }}">Mark Pokémon caught in the Pokédex and this will suggest the best options you already have.</p>
+                  <div class="v2-gym-picks" data-generic-gym-picks="{{ fight.name | lower }}">
+                    <span>No caught recommendations yet.</span>
+                  </div>
+                  <small data-generic-gym-fallback="{{ fight.name | lower }}">Catch or mark relevant team members to unlock matchup suggestions.</small>
+                </section>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+          {% if v2_game.id == "legends-za" %}
+          <section class="v2-guide-panel v2-za-note-panel" aria-label="{{ chapter.title }} field notes">
+            <div class="v2-panel-title">
+              <span>Field notes</span>
+              <strong data-za-note-status="{{ chapter.id }}">empty</strong>
+            </div>
+            <label class="v2-za-note-label">
+              <span>Use this while playing</span>
+              <textarea data-za-field-note="{{ chapter.id }}"
+                        rows="3"
+                        placeholder="Example: Hawlucha showed up after Rank D in Wild Zone __. Mega Stone note here."></textarea>
+            </label>
+          </section>
+          {% endif %}
+          {% if chapter.leave_checks %}
+          <section class="v2-guide-panel v2-guide-leave-panel{% if v2_game.id == 'scarlet-violet' %} v2-sv-leave-panel{% elif v2_game.id == 'heartgold-soulsilver' %} v2-hgss-leave-panel{% endif %}" aria-label="{{ chapter.title }} leave-area review">
+            <div class="v2-panel-title">
+              <span>{% if v2_game.id == "heartgold-soulsilver" %}Before you leave this arc{% else %}Before you leave this area{% endif %}</span>
+              <strong>{{ chapter.leave_checks | length }}</strong>
+            </div>
+            <div class="v2-guide-leave-list{% if v2_game.id == 'scarlet-violet' %} v2-sv-leave-list{% elif v2_game.id == 'heartgold-soulsilver' %} v2-hgss-leave-list{% endif %}">
+              {% for item in chapter.leave_checks %}
+              <article class="v2-guide-leave-card{% if v2_game.id == 'scarlet-violet' %} v2-sv-leave-card{% elif v2_game.id == 'heartgold-soulsilver' %} v2-hgss-leave-card{% endif %}"
+                       {% if item.preferred_modes %}data-sv-preferred-modes="{{ item.preferred_modes | join(',') }}"{% endif %}>
+                <strong>{{ item.label }}</strong>
+                <small>{{ item.detail }}</small>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+          {% if v2_game.id == "scarlet-violet" and chapter.starfall_checks %}
+          <section class="v2-guide-panel v2-sv-star-panel" aria-label="{{ chapter.title }} Team Star review">
+            <div class="v2-panel-title">
+              <span>Starfall lane</span>
+              <strong>{{ chapter.starfall_checks | length }}</strong>
+            </div>
+            <div class="v2-sv-star-list">
+              {% for item in chapter.starfall_checks %}
+              <article class="v2-sv-star-card"
+                       {% if item.preferred_modes %}data-sv-preferred-modes="{{ item.preferred_modes | join(',') }}"{% endif %}>
+                <strong>{{ item.label }}</strong>
+                <small>{{ item.detail }}</small>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+          {% set chapter_items = generic_guide_items_by_chapter.get(chapter.id, []) %}
+          <div class="v2-guide-accordion-stack">
+            {% if chapter_items %}
+            <details class="v2-guide-accordion">
+              <summary class="v2-guide-accordion-summary">
+                <span>Item checklist</span>
+                <strong>{{ chapter_items | length }}</strong>
+              </summary>
+              <div class="v2-guide-accordion-body">
+                <div class="v2-step-list">
+                  {% for item in chapter_items %}
+                  <label class="v2-item-card v2-item-card-compact"
+                         {% if item.preferred_modes %}data-sv-preferred-modes="{{ item.preferred_modes | join(',') }}"{% endif %}>
+                    <input type="checkbox" class="v2-generic-item-check" data-generic-item-id="{{ item.id }}" />
+                    <span>
+                      <em class="v2-generic-flag-row">
+                        <span class="v2-item-kind">{{ item.kind }}</span>
+                        {% for flag in item.guide_flags %}
+                        <span class="v2-item-priority{% if flag == 'Optional' %} optional{% endif %}">{{ flag }}</span>
+                        {% endfor %}
+                      </em>
+                      <strong>{{ item.label }}</strong>
+                      <small>{{ item.chapter }} · {{ item.detail }}</small>
+                    </span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+            </details>
+            {% endif %}
+
+            {% if chapter.pokemon_targets %}
+            <details class="v2-guide-accordion">
+              <summary class="v2-guide-accordion-summary">
+                <span>{{ chapter.target_heading | default('Catch targets') }}</span>
+                <strong data-generic-target-count="{{ chapter.id }}">0/{{ chapter.pokemon_targets | length }}</strong>
+              </summary>
+              <div class="v2-guide-accordion-body">
+              <div class="v2-target-list">
+                {% for target in chapter.pokemon_targets %}
+                <article class="v2-target-card{% if v2_game.id == 'platinum' %} v2-platinum-target-card{% endif %}"
+                         data-generic-guide-target="{{ target.dex }}"
+                         data-generic-guide-target-chapter="{{ chapter.id }}"
+                         {% if target.preferred_modes %}data-sv-preferred-modes="{{ target.preferred_modes | join(',') }}"{% endif %}
+                         data-version-scope="{{ target.version_availability | default('both') }}"
+                         data-hgss-time="{{ target.time_of_day | default('any') }}"
+                         data-za-confidence="{{ target.confidence | default('') | lower }}"
+                         data-za-mega-target="{{ 'true' if 'mega' in ((target.confidence | default('')) ~ ' ' ~ (target.method | default('')) ~ ' ' ~ (target.why_it_matters | default(''))) | lower else 'false' }}">
+                  <div class="v2-target-head">
+                    {% if target.sprite_url %}
+                    <div class="v2-target-sprite">
+                      <img src="{{ target.sprite_url }}"
+                           data-fallback-src="{{ target.sprite_fallback_url }}"
+                           alt="{{ target.name }} sprite"
+                           loading="lazy"
+                           decoding="async"
+                           onerror="if (this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.dataset.fallbackSrc = ''; } else { this.closest('.v2-target-sprite').classList.add('missing'); this.remove(); }" />
+                    </div>
+                    {% endif %}
+                    <div class="v2-target-status-row">
+                      <label class="v2-target-check">
+                        <input class="v2-target-caught"
+                               type="checkbox"
+                               data-generic-caught="{{ target.dex }}" />
+                        <span>caught</span>
+                      </label>
+                      {% if v2_game.id == "legends-za" %}
+                      <label class="v2-target-check v2-target-verified-check">
+                        <input class="v2-target-verified"
+                               type="checkbox"
+                               data-za-verified="{{ target.dex }}"
+                               data-za-verified-chapter="{{ chapter.id }}" />
+                        <span>verified</span>
+                      </label>
+                      {% endif %}
+                    </div>
+                    <div class="v2-target-main">
+                      <div class="v2-target-title-row">
+                        <span>#{{ "%03d" | format(target.display_dex or target.dex) }} {{ target.name }}</span>
+                        {% if v2_game.id == "platinum" %}
+                        <button class="v2-target-open" type="button" data-platinum-target-toggle="{{ target.dex }}" aria-expanded="false">Details</button>
+                        {% endif %}
+                      </div>
+                      <div class="v2-target-summary-row">
+                        <strong>{{ target.where }}</strong>
+                        <small>{{ target.when }}</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="v2-target-details{% if v2_game.id == 'platinum' %} v2-platinum-target-details{% endif %}">
+                  {% set target_meta = [
+                    ('Confidence', target.confidence),
+                    ('Method', target.method),
+                    ('Rarity', target.rarity),
+                    ('Levels', target.levels),
+                    ('When', target.timing)
+                  ] %}
+                  {% if target_meta | selectattr(1) | list %}
+                  <div class="v2-target-meta" aria-label="{{ target.name }} encounter details">
+                    {% for label, value in target_meta if value %}
+                    <span>{{ label }}: {{ value }}</span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  {% if target.guide_flags %}
+                  <div class="v2-generic-flag-row v2-target-flag-row" aria-label="{{ target.name }} special guide flags">
+                    {% for flag in target.guide_flags %}
+                    <span class="v2-item-priority{% if flag == 'Timing' %} optional{% endif %}">{{ flag }}</span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  <p>{{ target.why_it_matters }}</p>
+                  {% if target.tip and target.tip != target.why_it_matters %}
+                  <p class="v2-target-tip">{{ target.tip }}</p>
+                  {% endif %}
+                  {% if v2_game.id == "legends-za" %}
+                  <label class="v2-za-location-label">
+                    <span>Verified location / timing</span>
+                    <input type="text"
+                           data-za-location="{{ target.dex }}"
+                           placeholder="Example: Wild Zone 3, daytime, after Rank D" />
+                  </label>
+                  {% endif %}
+                  </div>
+                </article>
+                {% endfor %}
+              </div>
+              </div>
+            </details>
+            {% endif %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {% if v2_game.id == "legends-za" %}
+  <section class="v2-guide v2-tab-panel" data-v2-generic-panel="wild-zones" aria-label="Legends Z-A Wild Zone workspace">
+    <div class="v2-guide-head">
+      <div>
+        <p class="v2-kicker">Wild Zones</p>
+        <h2>Wild Zone workspace</h2>
+        <p>Use this as the field-planning side of Z-A: zone progress, cleanup buckets, and quick jumps into the Pokédex when you want to mark catches or review uncaught targets.</p>
+      </div>
+    </div>
+
+    <section class="v2-za-zone-deck" aria-label="Z-A Wild Zone progress">
+      <div class="v2-panel-title">
+        <span>Wild Zone dashboard</span>
+        <strong>Zone-by-zone</strong>
+      </div>
+      <div class="v2-za-zone-grid">
+        {% for zone in v2_za_wild_zones %}
+        <button class="v2-za-zone-card" type="button" data-za-zone-card="{{ zone.zone }}">
+          <span>{{ zone.zone }}</span>
+          <strong data-za-zone-card-count="{{ zone.zone }}">0/{{ zone.pokemon | length }}</strong>
+          <small>{{ zone.unlock }} · {{ zone.levels }}</small>
+          <em>{{ zone.pokemon[:4] | join(', ') }}{% if zone.pokemon | length > 4 %} +{{ (zone.pokemon | length) - 4 }} more{% endif %}</em>
+          <span class="v2-za-zone-actions">
+            <span role="button" tabindex="0" data-za-zone-mark-all="{{ zone.zone }}">Mark all caught</span>
+            <span role="button" tabindex="0" data-za-zone-clear="{{ zone.zone }}">Clear zone</span>
+          </span>
+        </button>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="v2-za-zone-deck v2-za-evolution-deck" aria-label="Z-A evolution planning">
+      <div class="v2-panel-title">
+        <span>Evolution planning</span>
+        <strong>Cleanup buckets</strong>
+      </div>
+      <div class="v2-za-zone-grid v2-za-evolution-grid">
+        <button class="v2-za-zone-card v2-za-evolution-card" type="button" data-za-evolution-jump="level-evolution">
+          <span>Level evolutions</span>
+          <strong data-za-evolution-count="level-evolution">0</strong>
+          <small>Standard leveling</small>
+          <em>Use this when you want easy cleanup targets after catching base forms.</em>
+        </button>
+        <button class="v2-za-zone-card v2-za-evolution-card" type="button" data-za-evolution-jump="stone-evolution">
+          <span>Stone evolutions</span>
+          <strong data-za-evolution-count="stone-evolution">0</strong>
+          <small>Item planning</small>
+          <em>Shiny, Dawn, Dusk, elemental, Moon, Sun, Leaf, Ice, Water, Fire, and Thunder Stone branches.</em>
+        </button>
+        <button class="v2-za-zone-card v2-za-evolution-card" type="button" data-za-evolution-jump="trade-evolution">
+          <span>Trade evolutions</span>
+          <strong data-za-evolution-count="trade-evolution">0</strong>
+          <small>External dependency</small>
+          <em>Plan these separately so they do not look like ordinary catch targets.</em>
+        </button>
+        <button class="v2-za-zone-card v2-za-evolution-card" type="button" data-za-evolution-jump="friendship-evolution">
+          <span>Friendship evolutions</span>
+          <strong data-za-evolution-count="friendship-evolution">0</strong>
+          <small>Timing / happiness</small>
+          <em>Friendship, day/night, and move-condition branches worth tracking while training.</em>
+        </button>
+      </div>
+    </section>
+  </section>
+
+  <section class="v2-guide v2-tab-panel" data-v2-generic-panel="rank-battles" aria-label="Legends Z-A rank battle workspace">
+    <div class="v2-guide-head">
+      <div>
+        <p class="v2-kicker">Rank battles</p>
+        <h2>Promotion battle planner</h2>
+        <p>Use this as the battle desk for Z-A. Every promotion fight stays here with the opponent lineup, counter ideas, and live caught-roster suggestions from your Pokédex.</p>
+      </div>
+    </div>
+    <section class="v2-guide-panel v2-za-team-planner" aria-label="Legends Z-A battle team planner">
+      <div class="v2-panel-title">
+        <span>Battle team</span>
+        <strong>Active six + levels</strong>
+      </div>
+      <p class="v2-za-rank-section-copy">Pick the six Pokemon you are actually using right now. Rank battle helpers will prefer these first, then fall back to the rest of your caught roster if needed.</p>
+      <div class="v2-za-team-grid">
+        {% for slot in range(1, 7) %}
+        <article class="v2-za-team-slot" data-za-team-slot-card="{{ slot }}">
+          <div class="v2-za-team-slot-topline">
+            <strong>Slot {{ slot }}</strong>
+            <small data-za-team-slot-status="{{ slot }}">No Pokemon selected</small>
+          </div>
+          <label class="v2-za-team-field">
+            <span>Pokemon</span>
+            <select data-za-team-slot="{{ slot }}">
+              <option value="">Empty slot</option>
+            </select>
+          </label>
+          <label class="v2-za-team-field">
+            <span>Level</span>
+            <input type="number"
+                   min="1"
+                   max="100"
+                   step="1"
+                   inputmode="numeric"
+                   placeholder="Lv."
+                   data-za-team-level="{{ slot }}" />
+          </label>
+          <div class="v2-za-team-moves">
+            <span>Moves</span>
+            <div class="v2-za-team-move-grid">
+              {% for move_slot in range(1, 5) %}
+              <input type="text"
+                     maxlength="30"
+                     placeholder="Move {{ move_slot }}"
+                     data-za-team-move="{{ slot }}-{{ move_slot }}" />
+              {% endfor %}
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      <small class="v2-za-team-note">This planner now reads your active team, levels, and move names. Rank battles will prefer real team members first and call out when your entered moves match the coverage the fight wants.</small>
+    </section>
+    <div class="v2-za-rank-board">
+      {% for chapter in generic_guide_chapters if chapter.promotion_fights %}
+      <section class="v2-guide-panel v2-za-rank-section" aria-label="{{ chapter.title }} rank battles">
+        <div class="v2-panel-title">
+          <span>{{ chapter.stage }}</span>
+          <strong>{{ chapter.title }}</strong>
+        </div>
+        <p class="v2-za-rank-section-copy">{{ chapter.subtitle }}</p>
+        <div class="v2-za-fight-grid">
+          {% for fight in chapter.promotion_fights %}
+          <article class="v2-za-fight-card">
+            <div class="v2-za-fight-topline">
+              <div>
+                <span>{{ fight.rank }}</span>
+                <strong>{{ fight.name }}</strong>
+              </div>
+              {% if fight.ticket_points %}
+              <em>{{ fight.ticket_points }}</em>
+              {% endif %}
+            </div>
+            <div class="v2-za-fight-columns">
+              <div class="v2-za-fight-team">
+                <span>Opponent team</span>
+                <ul>
+                  {% for member in fight.team %}
+                  <li>{{ member }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="v2-za-fight-counters">
+                <span>Best counters</span>
+                <div class="v2-za-fight-counter-chips">
+                  {% for counter in fight.counters %}
+                  <small>{{ counter }}</small>
+                  {% endfor %}
+                </div>
+                <p>{{ fight.strategy }}</p>
+              </div>
+            </div>
+            <section class="v2-gym-helper v2-za-fight-helper" data-generic-gym-helper="{{ fight.name | lower }}" aria-label="{{ fight.name }} caught roster helper">
+              <div class="v2-panel-title">
+                <span>{{ fight.name }} live roster helper</span>
+                <strong>Best caught options</strong>
+              </div>
+              <p data-generic-gym-summary="{{ fight.name | lower }}">Mark Pokémon caught in the Pokédex and this will suggest the best options you already have.</p>
+              <div class="v2-gym-picks" data-generic-gym-picks="{{ fight.name | lower }}">
+                <span>No caught recommendations yet.</span>
+              </div>
+              <small data-generic-gym-fallback="{{ fight.name | lower }}">Catch or mark relevant team members to unlock matchup suggestions.</small>
+            </section>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="v2-board v2-tab-panel" data-v2-generic-panel="pokedex" aria-label="{{ v2_game.name }} V2 Pokédex">
+    <div class="v2-board-head">
+      <div>
+        <p class="v2-kicker">Pokédex</p>
+        <h2>{{ v2_game.name }} guide Pokédex</h2>
+        {% if v2_game.id == "legends-za" %}
+        <p>This uses the Lumiose Pokédex with mission-and-rank guide structure on top: main missions and promotion battles first, Wild Zone cleanup second, and postgame or DLC entries kept separate on purpose.</p>
+        {% elif v2_game.id == "heartgold-soulsilver" %}
+        <p>This uses an updated Johto-dex draft for HG/SS with Johto-to-Kanto guide structure, day/night reminders, roamers, and remake-specific item notes.</p>
+        {% elif v2_game.id == "red-blue" %}
+        <p>This uses a classic Kanto Red/Blue draft with version routes, city arcs, Safari cleanup, dojo choices, and late legendary reminders.</p>
+        {% elif v2_game.id == "yellow" %}
+        <p>This uses a Yellow-focused Kanto draft with Partner Pikachu, gift starter routes, city arcs, Safari cleanup, and late legendary reminders.</p>
+        {% elif v2_game.id == "gold-silver" %}
+        <p>This uses a classic Johto Gold/Silver draft with day-night routes, roamers, Johto-to-Kanto structure, and Red-aware postgame reminders.</p>
+        {% elif v2_game.id == "crystal" %}
+        <p>This uses a Crystal-focused Johto draft with day-night routes, Suicune story focus, Johto-to-Kanto structure, and Red-aware postgame reminders.</p>
+        {% elif v2_game.id == "emerald" %}
+        <p>This uses a Hoenn-focused Emerald draft with weather-route catches, fossil branches, gifts or statics, sea cleanup, and Battle Frontier-aware postgame reminders.</p>
+        {% elif v2_game.id == "ruby-sapphire" %}
+        <p>This uses a Hoenn-focused Ruby/Sapphire draft with version villains, mascot legendary split, fossils, sea cleanup, and Regi/Lati-aware postgame reminders.</p>
+        {% elif v2_game.id == "oras" %}
+        <p>This uses a Hoenn-focused ORAS draft with DexNav-aware routes, fossils, gifts/statics, Primal story flow, soaring, Mirage Spots, and Delta Episode cleanup.</p>
+        {% elif v2_game.id == "diamond-pearl" %}
+        <p>This uses a Sinnoh-focused Diamond/Pearl draft with Honey Trees, Great Marsh cleanup, gifts/statics, version legendaries, and Battle Zone-aware postgame reminders.</p>
+        {% elif v2_game.id == "bdsp" %}
+        <p>This uses a Sinnoh-focused BDSP draft with Grand Underground revisits, Honey Trees, Great Marsh cleanup, gifts/statics, version legendaries, and Ramanas Park-aware postgame reminders.</p>
+        {% elif v2_game.id == "platinum" %}
+        <p>This page is structured as an area-by-area Platinum walkthrough with catch tracking and guide reminders.</p>
+        {% elif v2_game.id == "black-white" %}
+        <p>This uses a Unova-focused Black/White draft with seasons, shaking grass, monkey gifts, version flavor, and story-dragon cleanup.</p>
+        {% elif v2_game.id == "black2-white2" %}
+        <p>This uses a Unova-focused B2/W2 draft with Habitat List routing, Hidden Grottos, sequel city or route hubs, and Nature Preserve-aware postgame cleanup.</p>
+        {% elif v2_game.id == "sun-moon" %}
+        <p>This uses an Alola-focused Sun/Moon draft with island trials, Island Scan notes, gifts/statics, version route flavor, and Ultra Beast-aware postgame reminders.</p>
+        {% elif v2_game.id == "usum" %}
+        <p>This uses an Alola-focused Ultra Sun/Ultra Moon draft with altered trials, Mantine Surf, Ultra Necrozma prep, Ultra Wormholes, and postgame Tapu cleanup.</p>
+        {% elif v2_game.id == "x-y" %}
+        <p>This uses a Kalos-focused X/Y draft with Mega Evolution setup, fossil choice, city-hub progression, version routes, and Friend Safari-aware postgame reminders.</p>
+        {% elif v2_game.id == "sword-shield" %}
+        <p>This uses a Galar-focused Sword/Shield draft with Wild Area routing, version gyms, fossils, Champion Cup prep, and wolf-legend-aware postgame reminders.</p>
+        {% elif v2_game.id == "legends-arceus" %}
+        <p>This uses a Hisui-focused Legends: Arceus draft with survey tasks, noble pacing, distortions, movement unlocks, and Arceus-aware postgame reminders.</p>
+        {% elif v2_game.id == "scarlet-violet" %}
+        <p>This uses the base-game 400-entry Paldea regional dex with gym-Titan-Star routing, province cleanup, paradox tracking, Area Zero flow, and legendary-aware postgame reminders.</p>
+        {% elif v2_game.id == "lets-go" %}
+        <p>This uses a Let's Go-focused Kanto draft with partner version choice, catch combos, overworld spawns, Safari cleanup, and postgame legendary reminders.</p>
+        {% else %}
+        <p>This starts broad on purpose. We can replace draft entries with exact regional/route data as each game guide is finalized.</p>
+        {% endif %}
+      </div>
+      <div class="v2-toolbar" role="toolbar" aria-label="Generic V2 filters">
+        <input id="v2-generic-search" class="v2-search" type="search" placeholder="Search Pokémon or type..." aria-label="Search Pokémon" />
+        <select id="v2-generic-type-filter" class="v2-type-filter" aria-label="Filter Pokémon by type">
+          <option value="all">All types</option>
+          {% for type_name in v2_entry_types %}
+          <option value="{{ type_name | lower }}">{{ type_name | title }}</option>
+          {% endfor %}
+        </select>
+        <button class="v2-chip active" data-v2-generic-filter="all" type="button">All</button>
+        <button class="v2-chip" data-v2-generic-filter="caught" type="button">Caught</button>
+        <button class="v2-chip" data-v2-generic-filter="uncaught" type="button">Uncaught</button>
+        <button class="v2-chip" data-v2-generic-filter="guide-target" type="button">Guide targets</button>
+        {% if v2_game.id in ["red-blue", "yellow", "lets-go"] %}
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id in ["gold-silver", "crystal"] %}
+        <button class="v2-chip" data-v2-generic-filter="day-night" type="button">Day/Night</button>
+        <button class="v2-chip" data-v2-generic-filter="contest" type="button">Contest</button>
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id == "heartgold-soulsilver" %}
+        <button class="v2-chip" data-v2-generic-filter="day-night" type="button">Day/Night</button>
+        <button class="v2-chip" data-v2-generic-filter="morning" type="button">Morning</button>
+        <button class="v2-chip" data-v2-generic-filter="day" type="button">Day</button>
+        <button class="v2-chip" data-v2-generic-filter="night" type="button">Night</button>
+        <button class="v2-chip" data-v2-generic-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="headbutt" type="button">Headbutt</button>
+        <button class="v2-chip" data-v2-generic-filter="contest" type="button">Contest</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id in ["emerald", "ruby-sapphire", "oras"] %}
+        <button class="v2-chip" data-v2-generic-filter="weather" type="button">Weather</button>
+        <button class="v2-chip" data-v2-generic-filter="fossil" type="button">Fossil</button>
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id in ["diamond-pearl", "platinum", "bdsp"] %}
+        <button class="v2-chip" data-v2-generic-filter="honey" type="button">Honey</button>
+        <button class="v2-chip" data-v2-generic-filter="great-marsh" type="button">Great Marsh</button>
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id in ["black-white", "black2-white2"] %}
+        <button class="v2-chip" data-v2-generic-filter="seasonal" type="button">Seasonal</button>
+        <button class="v2-chip" data-v2-generic-filter="shaking-grass" type="button">Shaking grass</button>
+        {% if v2_game.id == "black2-white2" %}
+        <button class="v2-chip" data-v2-generic-filter="hidden-grotto" type="button">Hidden Grotto</button>
+        {% endif %}
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id in ["sun-moon", "usum"] %}
+        <button class="v2-chip" data-v2-generic-filter="island-scan" type="button">Island Scan</button>
+        {% if v2_game.id == "usum" %}
+        <button class="v2-chip" data-v2-generic-filter="ultra-wormhole" type="button">Ultra Wormhole</button>
+        {% endif %}
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id == "x-y" %}
+        <button class="v2-chip" data-v2-generic-filter="mega-planning" type="button">Mega Planning</button>
+        <button class="v2-chip" data-v2-generic-filter="fossil" type="button">Fossil</button>
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id == "sword-shield" %}
+        <button class="v2-chip" data-v2-generic-filter="wild-area" type="button">Wild Area</button>
+        <button class="v2-chip" data-v2-generic-filter="fossil" type="button">Fossil</button>
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id == "legends-arceus" %}
+        <button class="v2-chip" data-v2-generic-filter="research-task" type="button">Research</button>
+        <button class="v2-chip" data-v2-generic-filter="space-time-distortion" type="button">Distortion</button>
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id == "lets-go" %}
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id == "scarlet-violet" %}
+        <button class="v2-chip" data-v2-generic-filter="open-world" type="button">Open World</button>
+        <button class="v2-chip" data-v2-generic-filter="province-route" type="button">Province</button>
+        <button class="v2-chip" data-v2-generic-filter="titan-route" type="button">Titans</button>
+        <button class="v2-chip" data-v2-generic-filter="team-star-route" type="button">Team Star</button>
+        <button class="v2-chip" data-v2-generic-filter="odd-evolution" type="button">Odd Evolutions</button>
+        <button class="v2-chip" data-v2-generic-filter="paldean-form" type="button">Paldean Forms</button>
+        <button class="v2-chip" data-v2-generic-filter="paradox" type="button">Paradox</button>
+        <button class="v2-chip" data-v2-generic-filter="area-zero" type="button">Area Zero</button>
+        <button class="v2-chip" data-v2-generic-filter="gift-static" type="button">Gift/Static</button>
+        <button class="v2-chip" data-v2-generic-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-v2-generic-filter="legendary" type="button">Legendary</button>
+        {% endif %}
+        {% if v2_game.id == "legends-za" %}
+        <button class="v2-chip" data-v2-generic-filter="wild-zone" type="button">Wild Zone</button>
+        <button class="v2-chip" data-v2-generic-filter="evolution" type="button">Evolution</button>
+        <button class="v2-chip" data-v2-generic-filter="level-evolution" type="button">Level Evo</button>
+        <button class="v2-chip" data-v2-generic-filter="stone-evolution" type="button">Stone Evo</button>
+        <button class="v2-chip" data-v2-generic-filter="trade-evolution" type="button">Trade Evo</button>
+        <button class="v2-chip" data-v2-generic-filter="friendship-evolution" type="button">Friendship</button>
+        <button class="v2-chip" data-v2-generic-filter="mega-planning" type="button">Mega Planning</button>
+        <button class="v2-chip" data-v2-generic-filter="mega-source-review" type="button">Mega Source Review</button>
+        <button class="v2-chip" data-v2-generic-filter="special" type="button">Special</button>
+        <button class="v2-chip" data-v2-generic-filter="postgame" type="button">Postgame</button>
+        <button class="v2-chip" data-v2-generic-filter="needs-location" type="button">Needs location note</button>
+        <button class="v2-chip" data-v2-generic-filter="with-location" type="button">Has location note</button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if v2_game.id == "legends-za" %}
+    <div class="v2-za-detail-modal open" id="v2-za-detail-modal" aria-hidden="false">
+      <aside class="v2-za-detail-panel" id="v2-za-detail-panel" aria-labelledby="v2-za-detail-name" aria-live="polite">
+        <span class="v2-za-detail-helper">Click a Pokédex card to load details here.</span>
+        <div class="v2-za-detail-hero">
+          <div class="v2-za-detail-sprite">
+            <img id="v2-za-detail-sprite"
+                 alt="Selected Pokémon artwork"
+                 loading="lazy"
+                 decoding="async"
+                 onerror="if (this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.dataset.fallbackSrc = ''; } else { this.closest('.v2-za-detail-sprite').classList.add('missing'); this.removeAttribute('src'); }" />
+          </div>
+        </div>
+        <div>
+          <span id="v2-za-detail-number">Select a Pokémon</span>
+          <h3 id="v2-za-detail-name">Z-A detail</h3>
+          <p id="v2-za-detail-note">Click any Lumiose Pokédex card to see playthrough-specific status, guide notes, and location tracking here.</p>
+        </div>
+        <div class="v2-za-detail-tags">
+          <span id="v2-za-detail-caught">Caught: no</span>
+          <span id="v2-za-detail-verified">Verified: no</span>
+          <span id="v2-za-detail-guide">Guide target: no</span>
+        </div>
+        <div class="v2-za-detail-types" id="v2-za-detail-types" aria-label="Selected Pokémon types"></div>
+        <div class="v2-za-detail-actions" aria-label="Z-A selected Pokémon quick actions">
+          <label class="v2-target-check v2-za-detail-check">
+            <input id="v2-za-detail-caught-toggle" type="checkbox" disabled />
+            <span>caught</span>
+          </label>
+          <label class="v2-target-check v2-za-detail-check">
+            <input id="v2-za-detail-verified-toggle" type="checkbox" disabled />
+            <span>verified</span>
+          </label>
+        </div>
+        <label class="v2-za-location-label">
+          <span>Verified location / timing</span>
+          <input id="v2-za-detail-location"
+                 type="text"
+                 placeholder="Example: Wild Zone 3, daytime, after Rank D"
+                 disabled />
+        </label>
+        <div class="v2-za-detail-button-row">
+          <button class="v2-button v2-button-ghost" type="button" id="v2-za-detail-guide-jump" disabled>Jump to guide target</button>
+          <button class="v2-button v2-button-ghost" type="button" id="v2-za-detail-info" disabled>Open legacy full info</button>
+        </div>
+        <form class="v2-za-correction-form" action="/v2/suggest" method="post" id="v2-za-correction-form">
+          <input type="hidden" name="title" id="v2-za-correction-title" value="Z-A data correction" />
+          <input type="hidden" name="details" id="v2-za-correction-details" value="" />
+          <button class="v2-button v2-button-ghost" type="submit" id="v2-za-correction-submit" disabled>Flag this Z-A entry</button>
+          <small>Send a correction to admin. If you are not logged in, the app will ask you to log in first.</small>
+        </form>
+      </aside>
+    </div>
+    {% endif %}
+
+    <div class="v2-card-grid" id="v2-generic-card-grid">
+      {% for p in v2_entries %}
+      {% set p_tags = p.tags | default([]) %}
+      <article class="v2-pokemon-card status-catchable"
+               role="button"
+               tabindex="0"
+               data-generic-card
+               data-dex="{{ p.dex }}"
+               data-name="{{ p.name | lower }}"
+               data-regional-dex="{{ p.regional_dex or '' }}"
+               data-types="{{ p.types | join(',') }}"
+               data-display-name="{{ p.name }}"
+               data-note="{{ p.note }}"
+               data-method="{{ p.method }}"
+               data-tags="{{ p_tags | join(',') }}"
+               {% if p.preferred_modes %}data-sv-preferred-modes="{{ p.preferred_modes | join(',') }}"{% endif %}
+               data-version-scope="{% if p.version_availability is defined and p.version_availability %}{{ p.version_availability }}{% elif 'heartgold-exclusive' in p_tags %}heartgold{% elif 'soulsilver-exclusive' in p_tags %}soulsilver{% else %}both{% endif %}"
+               data-time-scope="{% if 'day-night' in p_tags %}{{ p.hgss_time | default('time-sensitive') }}{% else %}any{% endif %}"
+               data-wild-zones="{{ p.wild_zones | default([]) | join(',') }}"
+               data-sprite-url="{{ p.sprite_url }}"
+               data-sprite-fallback="{{ p.sprite_fallback_url }}"
+               data-guide-target="{{ 'true' if 'guide-target' in p_tags else 'false' }}">
+        <button class="v2-card-info"
+                type="button"
+                data-generic-info="{{ p.dex }}"
+                aria-label="Open full info for {{ p.name }}">Info</button>
+        <label class="v2-card-caught" aria-label="Mark {{ p.name }} caught">
+          <input type="checkbox" data-generic-caught="{{ p.dex }}" />
+          <span>Caught</span>
+        </label>
+        <div class="v2-card-sprite">
+          <img class="v2-pokemon-sprite"
+               src="{{ p.sprite_url }}"
+               data-fallback-src="{{ p.sprite_fallback_url }}"
+               alt="{{ p.name }} sprite"
+               loading="lazy"
+               decoding="async"
+               onerror="if (this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.dataset.fallbackSrc = ''; } else { this.closest('.v2-card-sprite').classList.add('missing'); this.remove(); }" />
+        </div>
+        <span class="v2-card-number">#{{ "%03d" | format(p.regional_dex or p.dex) }}</span>
+        <span class="v2-card-name">{{ p.name }}</span>
+        {% if p.regional_dex %}
+        <span class="v2-card-national">Nat #{{ "%03d" | format(p.dex) }}</span>
+        {% endif %}
+        <span class="v2-card-types">
+          {% for type_name in p.types %}
+          <em>{{ type_name | title }}</em>
+          {% endfor %}
+        </span>
+        <span class="v2-card-method">{{ p.method }}</span>
+        <span class="v2-card-ready">In V2</span>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="v2-type-chart v2-tab-panel" data-v2-generic-panel="type-chart" aria-label="{{ v2_game.name }} type chart">
+    <div class="v2-guide-head">
+      <div>
+        <p class="v2-kicker">Type chart</p>
+        <h2>Gen {{ v2_game.gen }} matchups</h2>
+        <p>This chart follows the generation rules for {{ v2_game.name }}. Use it while we build the full route guide.</p>
+      </div>
+    </div>
+    <div class="v2-type-controls">
+      <div class="v2-type-mode-group" role="tablist" aria-label="Type chart mode">
+        <button class="v2-type-mode active" type="button" data-generic-type-mode="offense">Offense</button>
+        <button class="v2-type-mode" type="button" data-generic-type-mode="defense">Defense</button>
+      </div>
+      <input id="v2-generic-type-search" class="v2-type-search" type="search" placeholder="Filter types..." aria-label="Filter type chart" />
+    </div>
+    <div class="v2-type-table" id="v2-generic-type-grid" role="table" aria-label="Generation {{ v2_game.gen }} type chart">
+      {% for row in type_chart %}
+      {% set search_blob = (
+           row.type_name ~ ' ' ~
+           (row.offense_super | join(' ')) ~ ' ' ~
+           (row.offense_not | join(' ')) ~ ' ' ~
+           (row.offense_immune | join(' ')) ~ ' ' ~
+           (row.defense_weak | join(' ')) ~ ' ' ~
+           (row.defense_resist | join(' ')) ~ ' ' ~
+           (row.defense_immune | join(' '))
+         ) | lower %}
+      <div class="v2-type-row" role="row" data-generic-type-row data-type-name="{{ row.type_name }}" data-search-text="{{ search_blob }}">
+        <div class="v2-type-attack" role="cell">
+          <span class="type-badge" style="background: {{ row.type_color }}">{{ row.type_name }}</span>
+        </div>
+        <div class="v2-type-col v2-type-col-offense" role="cell">
+          <div class="v2-type-col-label">2x</div>
+          <div class="v2-type-chips">
+            {% if row.offense_super %}
+              {% for t in row.offense_super %}<span class="type-badge type-badge-se">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">-</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-offense" role="cell">
+          <div class="v2-type-col-label">1/2x</div>
+          <div class="v2-type-chips">
+            {% if row.offense_not %}
+              {% for t in row.offense_not %}<span class="type-badge type-badge-nve">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">-</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-offense" role="cell">
+          <div class="v2-type-col-label">0x</div>
+          <div class="v2-type-chips">
+            {% if row.offense_immune %}
+              {% for t in row.offense_immune %}<span class="type-badge type-badge-immune">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">-</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-defense v2-type-hidden-col" role="cell">
+          <div class="v2-type-col-label">Weak to 2x</div>
+          <div class="v2-type-chips">
+            {% if row.defense_weak %}
+              {% for t in row.defense_weak %}<span class="type-badge type-badge-se">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">-</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-defense v2-type-hidden-col" role="cell">
+          <div class="v2-type-col-label">Resists 1/2x</div>
+          <div class="v2-type-chips">
+            {% if row.defense_resist %}
+              {% for t in row.defense_resist %}<span class="type-badge type-badge-nve">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">-</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-defense v2-type-hidden-col" role="cell">
+          <div class="v2-type-col-label">Immune 0x</div>
+          <div class="v2-type-chips">
+            {% if row.defense_immune %}
+              {% for t in row.defense_immune %}<span class="type-badge type-badge-immune">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">-</span>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="v2-items v2-tab-panel" data-v2-generic-panel="items" aria-label="{{ v2_game.name }} item reminders">
+    <div class="v2-guide-head">
+      <div>
+        <p class="v2-kicker">Items</p>
+        <h2>{{ v2_game.name }} reminders</h2>
+        <p>These are guide reminders. Gym/boss rewards stay informational unless they are missable or choice-based.</p>
+      </div>
+    </div>
+    <div class="v2-item-list">
+      {% for item in generic_guide_items %}
+      <label class="v2-item-card">
+        <input type="checkbox" class="v2-generic-item-check" data-generic-item-id="{{ item.id }}" />
+        <span>
+          <em class="v2-generic-flag-row">
+            <span class="v2-item-kind">{{ item.kind }}</span>
+            {% for flag in item.guide_flags %}
+            <span class="v2-item-priority{% if flag == 'Optional' %} optional{% endif %}">{{ flag }}</span>
+            {% endfor %}
+          </em>
+          <strong>{{ item.label }}</strong>
+          <small>{{ item.chapter }} · {{ item.detail }}</small>
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+    </div>
+  </div>
+</main>
+
+<script src="/static/v2-game.js?v={{ js_v }}"></script>
+{% endblock %}

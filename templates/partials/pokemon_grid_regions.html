@@ -1,0 +1,47 @@
+{% if grouped_regions %}
+  {% for section in grouped_regions %}
+  {% if section.total > 0 %}
+
+  <div class="region-section" id="region-{{ section.region | lower }}">
+
+    <!-- Region header (click to collapse) -->
+    <div class="region-header"
+         onclick="toggleRegion('region-{{ section.region | lower }}')">
+      <span class="region-emoji">{{ section.emoji }}</span>
+      <div>
+        <div class="region-name">{{ section.region }}</div>
+        <div class="region-stats">{{ section.caught }} / {{ section.total }} caught</div>
+      </div>
+      {% set rpct = ((section.caught / section.total) * 100) | int if section.total else 0 %}
+      <div class="region-progress-mini">
+        <div class="progress-track">
+          <div class="progress-fill accent"
+               style="width: {{ rpct }}%; --accent: {{ game.color }}"></div>
+        </div>
+      </div>
+      <span class="region-toggle" aria-hidden="true">&#9660;</span>
+    </div>
+
+    <!-- Pokemon grid for this region -->
+    <div class="region-grid">
+      {% for p in section.pokemon %}
+      {% include "partials/poke_card.html" %}
+      {% endfor %}
+    </div>
+
+  </div>
+  {% endif %}
+  {% endfor %}
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">&#128269;</div>
+  <div class="empty-text">No Pok&eacute;mon found. Try a different search or filter.</div>
+</div>
+{% endif %}
+
+<script>
+function toggleRegion(id) {
+  document.getElementById(id).classList.toggle("collapsed");
+}
+</script>

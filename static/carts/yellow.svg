@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B0B0B0"/>
+      <stop offset="100%" stop-color="#888"/>
+    </linearGradient>
+    <linearGradient id="lbl" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F0D000"/>
+      <stop offset="100%" stop-color="#E0C000"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.22"/>
+      <stop offset="55%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Plastic body (gray) -->
+  <path d="M4,0 H60 Q64,0 64,4 V76 H20 V92 Q20,100 12,100 H4 Q0,100 0,92 V4 Q0,0 4,0 Z"
+        fill="url(#bg)" stroke="#707070" stroke-width="0.5"/>
+  <!-- Contact strips (gold) -->
+  <rect x="24" y="80" width="5" height="14" rx="1" fill="#B8960C"/>
+  <rect x="31" y="80" width="5" height="14" rx="1" fill="#B8960C"/>
+  <rect x="38" y="80" width="5" height="14" rx="1" fill="#B8960C"/>
+  <rect x="45" y="80" width="5" height="14" rx="1" fill="#B8960C"/>
+  <rect x="52" y="80" width="5" height="14" rx="1" fill="#B8960C"/>
+  <!-- Label (paper sticker) -->
+  <rect x="3" y="4" width="58" height="68" rx="2" fill="url(#lbl)"/>
+  <rect x="3" y="4" width="58" height="68" rx="2" fill="url(#shine)"/>
+  <!-- Platform label -->
+  <text x="32" y="14" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="5.5" font-weight="700" fill="#222" opacity="0.85">GAME BOY COLOR</text>
+  <!-- Separator line -->
+  <line x1="8" y1="17" x2="56" y2="17" stroke="#222" stroke-width="0.5" opacity="0.3"/>
+  <!-- Pokemon silhouette -->
+  
+      <!-- Pikachu: yellow mouse -->
+      <ellipse cx="32" cy="50" rx="9" ry="10" fill="#F5C518"/>
+      <ellipse cx="32" cy="41" rx="6" ry="5" fill="#F5C518"/>
+      <polygon points="26,38 24,28 30,36" fill="#F5C518"/>
+      <polygon points="24,29 22,26 28,35" fill="#1a1a1a"/>
+      <polygon points="38,38 40,28 34,36" fill="#F5C518"/>
+      <polygon points="40,29 42,26 36,35" fill="#1a1a1a"/>
+      <circle cx="28" cy="50" r="2.5" fill="#FF4444" opacity="0.9"/>
+      <circle cx="36" cy="50" r="2.5" fill="#FF4444" opacity="0.9"/>
+      <polyline points="40,52 45,48 48,55 44,58" fill="#F5C518" stroke="#F5C518" stroke-width="2"/>
+    
+  <!-- Game title bar at bottom of label -->
+  <rect x="3" y="60" width="58" height="12" rx="0" fill="rgba(0,0,0,0.25)"/>
+  <text x="32" y="70" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="7.5" font-weight="900" fill="white" letter-spacing="0.2">PKMN YELLOW</text>
+</svg>

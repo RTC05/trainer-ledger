@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Login — Trainer Ledger{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-icon">🏕️</div>
+    <h1 class="auth-title">Welcome back!</h1>
+    <p class="auth-sub">Log in to your Trainer Ledger account</p>
+
+    {% if error %}
+    <div class="auth-error" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/login" class="auth-form">
+      <label class="auth-label" for="username">Username</label>
+      <input class="auth-input" id="username" name="username"
+             type="text" autocomplete="username" required
+             value="{{ username or '' }}" />
+
+      <label class="auth-label" for="password">Password</label>
+      <input class="auth-input" id="password" name="password"
+             type="password" autocomplete="current-password" required />
+
+      <button class="auth-btn" type="submit">Log in</button>
+    </form>
+
+    <p class="auth-switch">Security note: Trainer Ledger will never ask for payment information or software downloads to use your account.</p>
+
+    <p class="auth-switch">
+      Forgot your password?
+      <a href="/forgot-password" class="auth-link">Reset it here</a>
+    </p>
+
+    <p class="auth-switch">No account?
+      <a href="/register" class="auth-link">Register here</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}What’s New — Trainer Ledger{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:980px; padding-bottom:2.4rem;">
+  <div class="hero" style="margin-bottom:1rem;">
+    <h1 class="hero-title">📝 What’s New & Feature Requests</h1>
+    <p class="hero-sub">See recent player-facing changes, shipped improvements, and tell us what to build next.</p>
+  </div>
+
+  {% if message %}
+  <div class="auth-error" style="margin-bottom:1rem;">{{ message }}</div>
+  {% endif %}
+
+  {% if current_user %}
+  <div class="notes-panel" style="margin-bottom:1rem;">
+    <button class="notes-toggle" onclick="toggleSuggestForm()" aria-expanded="false" aria-controls="suggest-body">
+      <span class="notes-toggle-icon">💡</span>
+      Suggest a Feature
+      <span class="notes-chevron" id="suggest-chevron">&#9660;</span>
+    </button>
+    <div class="notes-body" id="suggest-body" hidden>
+      <form method="post" action="/updates/suggest" style="display:grid; gap:.65rem;">
+        <input name="title" class="search-input" placeholder="Feature title (e.g. Export catches to CSV)" required minlength="4" />
+        <textarea name="details" class="notes-textarea" rows="4" required minlength="10"
+                  placeholder="What would this do? Why would it help?"></textarea>
+        <div>
+          <button class="filter-pill active" type="submit">Submit suggestion</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="notes-panel" style="margin-bottom:1rem;">
+    <button class="notes-toggle" onclick="toggleBugForm()" aria-expanded="false" aria-controls="bug-body">
+      <span class="notes-toggle-icon">🐞</span>
+      Report a Bug
+      <span class="notes-chevron" id="bug-chevron">&#9660;</span>
+    </button>
+    <div class="notes-body" id="bug-body" hidden>
+      <form method="post" action="/updates/report-bug" style="display:grid; gap:.65rem;">
+        <input name="title" class="search-input" placeholder="Bug title (e.g. BW Gym 1 toggle fails)" required minlength="4" />
+        <textarea name="details" class="notes-textarea" rows="4" required minlength="10"
+                  placeholder="Steps to reproduce, expected behavior, actual behavior, device/browser"></textarea>
+        <div>
+          <button class="filter-pill" type="submit" style="border-color:#ff6b6b; color:#ff6b6b;">Submit bug report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if my_suggestions or my_bug_reports %}
+  <div class="notes-panel" style="margin-bottom:1rem; padding:1rem;">
+    <h3 style="margin:0 0 .6rem 0;">Your Submissions</h3>
+    <div style="display:grid; gap:.6rem;">
+      {% for s in my_suggestions %}
+      <div class="poke-card" style="padding:.75rem 1rem;">
+        <div style="font-weight:700; margin-bottom:.25rem;">💡 {{ s.title }}</div>
+        <div style="color:var(--text-muted); font-size:.9rem;">Suggestion · Status: <strong>{{ s.status }}</strong> · {{ s.created_at }}</div>
+      </div>
+      {% endfor %}
+      {% for b in my_bug_reports %}
+      <div class="poke-card" style="padding:.75rem 1rem; border-color: rgba(255,107,107,0.45);">
+        <div style="font-weight:700; margin-bottom:.25rem;">🐞 {{ b.title }}</div>
+        <div style="color:var(--text-muted); font-size:.9rem;">Bug report · Status: <strong>{{ b.status }}</strong> · {{ b.created_at }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="notes-panel" style="margin-bottom:1rem; padding:1rem;">
+    <strong>Want to suggest features?</strong>
+    <a href="/login" class="filter-pill" style="margin-left:.5rem;">Log in</a>
+  </div>
+  {% endif %}
+
+  <div class="notes-panel" style="padding:1rem;">
+    <h3 style="margin:0 0 .8rem 0;">Recent Changes</h3>
+    <p style="margin:0 0 .9rem; color:var(--text-muted);">This changelog is for changes that matter to players using the site, not internal dev-only notes.</p>
+    {% if entries %}
+      <div style="display:grid; gap:.75rem;">
+      {% for e in entries %}
+        <div class="poke-card" style="padding:.85rem 1rem;">
+          <div style="display:flex; justify-content:space-between; gap:1rem; align-items:center;">
+            <div style="font-weight:800;">{{ e.title }}</div>
+            <small style="color:var(--text-muted);">{{ e.created_at }}</small>
+          </div>
+          <div style="margin-top:.45rem; white-space:pre-wrap; color:var(--text);">{{ e.body }}</div>
+          {% if e.created_by_username %}
+          <small style="color:var(--text-muted);">Posted by {{ e.created_by_username }}</small>
+          {% endif %}
+        </div>
+      {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:var(--text-muted); margin:0;">No changelog entries yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function toggleSuggestForm() {
+  const body = document.getElementById('suggest-body');
+  const chev = document.getElementById('suggest-chevron');
+  if (!body || !chev) return;
+  const open = !body.hidden;
+  body.hidden = open;
+  chev.innerHTML = open ? '&#9660;' : '&#9650;';
+}
+
+function toggleBugForm() {
+  const body = document.getElementById('bug-body');
+  const chev = document.getElementById('bug-chevron');
+  if (!body || !chev) return;
+  const open = !body.hidden;
+  body.hidden = open;
+  chev.innerHTML = open ? '&#9660;' : '&#9650;';
+}
+</script>
+{% endblock %}

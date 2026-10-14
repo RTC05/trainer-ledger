@@ -1,0 +1,39 @@
+<section class="sv-school" aria-label="Academy classes and rewards">
+  <p>Speak to the receptionist in the entrance hall to take classes. Finish lessons 1-3 before a midterm, then lessons 4-6 before a final. A wrong classroom response does not block progress; failed exams can be retaken.</p>
+  <p>Each passed midterm gives 5 Exp. Candy S; each passed final gives 5 Exp. Candy M. Check room-map exclamation marks between visits: attending lessons alone does not finish teacher friendships.</p>
+  <aside class="sv-school-visit"><strong>Answer-key warning</strong><p>Answers below are short cues in question order, not full question quotations. Biology final question 3 uses <b>Yes</b> in the updated game; older releases and guides used No. The shiny-odds classroom answer is the rounded 1 in 4,000, not a calculator for actual shiny odds.</p></aside>
+  <p><strong>School progress:</strong> <span data-generic-local-guide-count="{{ chapter.id }}">0/{{ chapter.guide_steps | length }}</span></p>
+  {% for course in chapter.academy.courses %}
+  <details class="v2-guide-accordion">
+    <summary class="v2-guide-accordion-summary">{{ course.name }} · {{ course.teacher }}</summary>
+    <div class="v2-guide-accordion-body">
+      {% for step in course.steps %}
+      <div class="sv-school-task">
+        <label>
+          <input type="checkbox" class="v2-generic-guide-check" data-generic-guide-step="{{ step.id }}" data-generic-guide-chapter="{{ chapter.id }}" />
+          <strong>{{ course.name }}: {{ step.label }}</strong>
+        </label>
+        <p>{{ step.badges }} gym badges{% if not step.badges %} · after the introduction / Treasure Hunt{% endif %}; earlier lessons in this subject still required.</p>
+        {% if step.answers %}
+        <ol class="sv-exam-answers" aria-label="{{ course.name }} {{ step.label }} answers">
+          {% for answer in step.answers %}<li>{{ answer }}</li>{% endfor %}
+        </ol>
+        {% else %}<p>{{ step.detail }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endfor %}
+  <details class="v2-guide-accordion">
+    <summary class="v2-guide-accordion-summary">Teacher friendships and rewards</summary>
+    <div class="v2-guide-accordion-body">
+      <p>Complete each teacher's available conversations, then check the room map again after more classes or story progress. These rewards have different requirements; there is no single friendship-level counter to grind.</p>
+      {% for step in chapter.academy.friendships %}
+      <div class="sv-school-task">
+        <label><input type="checkbox" class="v2-generic-guide-check" data-generic-guide-step="{{ step.id }}" data-generic-guide-chapter="{{ chapter.id }}" /><strong>{{ step.label }}</strong></label>
+        <p>{{ step.detail }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+</section>

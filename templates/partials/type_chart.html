@@ -1,0 +1,136 @@
+<div class="type-chart-panel" id="type-chart-panel">
+  <button class="type-chart-toggle" onclick="toggleTypeChart()" aria-expanded="false" aria-controls="type-chart-body">
+    <span class="type-chart-icon">🧩</span>
+    Type Chart (Gen {{ game.gen }})
+    <span class="type-chart-chevron" id="type-chart-chevron">&#9660;</span>
+  </button>
+
+  <div class="type-chart-body" id="type-chart-body" hidden>
+    <div class="type-chart-controls">
+      <div class="type-chart-mode-group" role="tablist" aria-label="Type chart mode">
+        <button class="type-chart-mode-btn active" id="type-chart-mode-offense" type="button" onclick="setTypeChartMode('offense')">
+          Offense
+        </button>
+        <button class="type-chart-mode-btn" id="type-chart-mode-defense" type="button" onclick="setTypeChartMode('defense')">
+          Defense
+        </button>
+      </div>
+
+      <div class="type-chart-search-wrap">
+        <span class="type-chart-search-icon">🔎</span>
+        <input id="type-chart-search"
+               class="type-chart-search"
+               type="text"
+               placeholder="Filter types..."
+               autocomplete="off"
+               oninput="filterTypeChartRows(this.value)"
+               aria-label="Filter type chart rows" />
+      </div>
+    </div>
+
+    <div class="type-chart-grid" id="type-chart-grid">
+      {% for row in type_chart_rows %}
+      {% set search_blob = (
+           row.type_name ~ ' ' ~
+           (row.offense_super | join(' ')) ~ ' ' ~
+           (row.offense_not | join(' ')) ~ ' ' ~
+           (row.offense_immune | join(' ')) ~ ' ' ~
+           (row.defense_weak | join(' ')) ~ ' ' ~
+           (row.defense_resist | join(' ')) ~ ' ' ~
+           (row.defense_immune | join(' '))
+         ) | lower %}
+      <div class="type-chart-row"
+           data-type-name="{{ row.type_name }}"
+           data-search-text="{{ search_blob }}">
+        <div class="type-chart-attack">
+          <span class="type-badge" style="background: {{ row.type_color }}">{{ row.type_name }}</span>
+        </div>
+
+        <div class="type-chart-col type-chart-col-offense">
+          <div class="type-chart-col-label">2×</div>
+          <div class="type-chart-chips">
+            {% if row.offense_super %}
+              {% for t in row.offense_super %}
+              <span class="type-badge type-badge-se">{{ t }}</span>
+              {% endfor %}
+            {% else %}
+              <span class="type-chart-empty">—</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="type-chart-col type-chart-col-offense">
+          <div class="type-chart-col-label">½×</div>
+          <div class="type-chart-chips">
+            {% if row.offense_not %}
+              {% for t in row.offense_not %}
+              <span class="type-badge type-badge-nve">{{ t }}</span>
+              {% endfor %}
+            {% else %}
+              <span class="type-chart-empty">—</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="type-chart-col type-chart-col-offense">
+          <div class="type-chart-col-label">0×</div>
+          <div class="type-chart-chips">
+            {% if row.offense_immune %}
+              {% for t in row.offense_immune %}
+              <span class="type-badge type-badge-immune">{{ t }}</span>
+              {% endfor %}
+            {% else %}
+              <span class="type-chart-empty">—</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="type-chart-col type-chart-col-defense type-chart-hidden-col">
+          <div class="type-chart-col-label">Weak to (2×)</div>
+          <div class="type-chart-chips">
+            {% if row.defense_weak %}
+              {% for t in row.defense_weak %}
+              <span class="type-badge type-badge-se">{{ t }}</span>
+              {% endfor %}
+            {% else %}
+              <span class="type-chart-empty">—</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="type-chart-col type-chart-col-defense type-chart-hidden-col">
+          <div class="type-chart-col-label">Resists (½×)</div>
+          <div class="type-chart-chips">
+            {% if row.defense_resist %}
+              {% for t in row.defense_resist %}
+              <span class="type-badge type-badge-nve">{{ t }}</span>
+              {% endfor %}
+            {% else %}
+              <span class="type-chart-empty">—</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="type-chart-col type-chart-col-defense type-chart-hidden-col">
+          <div class="type-chart-col-label">Immune to (0×)</div>
+          <div class="type-chart-chips">
+            {% if row.defense_immune %}
+              {% for t in row.defense_immune %}
+              <span class="type-badge type-badge-immune">{{ t }}</span>
+              {% endfor %}
+            {% else %}
+              <span class="type-chart-empty">—</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if game.gen == 1 %}
+    <p class="type-chart-note">Gen 1 quirks applied: Ghost vs Psychic shows as 0× (in-game bug behavior).</p>
+    {% elif game.gen <= 5 %}
+    <p class="type-chart-note">Fairy type is excluded for Gen {{ game.gen }} accuracy.</p>
+    {% endif %}
+  </div>
+</div>

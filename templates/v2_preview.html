@@ -1,0 +1,687 @@
+{% extends "base.html" %}
+{% block title %}V2 Preview — Trainer Ledger{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/v2-preview.css?v={{ css_v }}" />
+
+<main class="v2-shell v2-generic-shell v2-gateway-shell" data-v2-theme="kanto-remake" data-v2-game-id="firered-leafgreen" data-v2-screen="gateway">
+  <script>
+    window.GAME_GEN = 3;
+    window.GAME_ID = 'firered-leafgreen';
+    window.GAME_VERSIONS = ['firered', 'leafgreen'];
+  </script>
+  <section class="v2-hero v2-gateway-hero">
+    <div>
+      <p class="v2-kicker">V2 guide library</p>
+      <h1>Trainer Ledger V2</h1>
+      <p class="v2-hero-copy">
+        Pick a game guide first, then use the walkthrough, Pokédex, type chart, and item reminders only when you need them.
+      </p>
+      <div class="v2-hero-actions">
+        <a href="/" class="v2-button v2-button-ghost">Back to legacy tracker</a>
+        <a href="#v2-game-front" class="v2-button">Choose a guide</a>
+      </div>
+    </div>
+
+    <aside class="v2-save-card">
+      <span class="v2-save-label">Tester notice</span>
+      <strong>V2 guide state is transitioning to permanent saves.</strong>
+      <p>V2 is becoming the main guide experience. The legacy tracker and team builder stay available as a simpler fallback.</p>
+    </aside>
+  </section>
+
+  <section class="v2-game-front v2-gateway-front" id="v2-game-front" aria-label="Choose a V2 game guide">
+    <div class="v2-game-front-head">
+      <div>
+        <p class="v2-kicker">Start here</p>
+        <h2>Choose your game guide</h2>
+        <p>Pick from the full game library. V2 is now the main guide-first experience, while the legacy tracker stays available for players who mainly want a Pokédex and team builder.</p>
+      </div>
+      <div class="v2-front-actions">
+        <button class="v2-mode-toggle active" type="button" data-guide-mode-toggle>
+          <span>Guide mode</span>
+          <strong>On</strong>
+        </button>
+        <button class="v2-button" type="button" data-open-v2-guide="firered-leafgreen">Continue FR/LG guide</button>
+      </div>
+    </div>
+    <div class="v2-game-tools" role="toolbar" aria-label="Filter V2 game guides">
+      <input id="v2-game-search" class="v2-game-search" type="search" placeholder="Search games, regions, generations..." aria-label="Search V2 games" />
+      <button class="v2-game-filter active" type="button" data-game-filter="all">All</button>
+      <button class="v2-game-filter" type="button" data-game-filter="playable">Playable</button>
+      <button class="v2-game-filter" type="button" data-game-filter="planned">Planned</button>
+      <button class="v2-game-filter" type="button" data-game-filter="gen-1">Gen 1</button>
+      <button class="v2-game-filter" type="button" data-game-filter="gen-3">Gen 3</button>
+      <button class="v2-game-filter" type="button" data-game-filter="gen-4">Gen 4</button>
+      <button class="v2-game-filter" type="button" data-game-filter="gen-9">Gen 9</button>
+    </div>
+    <div class="v2-game-card-grid">
+      {% for game in v2_game_library %}
+      <a class="v2-game-card{% if game.is_playable %} active{% else %} locked{% endif %}"
+         href="/v2/game/{{ game.id }}"
+         style="--game-accent: {{ game.color }}"
+         data-v2-game-card="{{ game.id }}"
+         data-game-status="{{ 'playable' if game.is_playable else 'planned' }}"
+         data-game-gen="gen-{{ game.gen }}"
+         data-game-search="{{ (game.name ~ ' ' ~ game.region ~ ' gen ' ~ game.gen ~ ' ' ~ game.status) | lower }}"
+         aria-label="Open {{ game.name }} guide">
+        <div class="v2-game-card-topline">
+          <span class="v2-game-status-badge{% if game.is_complete %} complete{% endif %}">{{ game.status }}</span>
+          <div class="v2-game-meta-chips" aria-label="{{ game.name }} metadata">
+            <span class="v2-game-meta-chip">Gen {{ game.gen }}</span>
+            <span class="v2-game-meta-chip">{{ game.region }}</span>
+          </div>
+        </div>
+        {% if game.box_art_url %}
+        <div class="v2-game-card-art{% if game.box_art_alt_url %} dual{% endif %}">
+          <img src="{{ game.box_art_url }}" alt="{{ game.name }} primary box art" loading="lazy" />
+          {% if game.box_art_alt_url %}
+          <img src="{{ game.box_art_alt_url }}" alt="{{ game.name }} alternate box art" loading="lazy" />
+          {% endif %}
+        </div>
+        {% endif %}
+        <strong>{{ game.name }}</strong>
+        {% if game.version_labels %}
+        <div class="v2-game-version-row" aria-label="{{ game.name }} versions">
+          {% for version in game.version_labels %}
+          <span>{{ version }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <em>{{ game.year }} · {{ '100% complete guide' if game.is_complete else ('Next guide focus' if game.status == 'Next focus' else ('Playable now' if game.is_playable else 'V2 queued')) }}</em>
+      </a>
+      {% endfor %}
+    </div>
+    <form class="v2-suggestion-card" method="post" action="/v2/suggest">
+      <div>
+        <span>Admin suggestions</span>
+        <strong>Help shape V2</strong>
+        <p>Send ideas, missing guide details, or rough edges straight into the admin suggestions queue.</p>
+      </div>
+      <label>
+        <span>Short title</span>
+        <input type="text" name="title" minlength="4" required value="V2 guide suggestion" />
+      </label>
+      <label>
+        <span>Suggestion</span>
+        <textarea name="details" minlength="10" required placeholder="Example: Route 3 should warn me about Nidoran version rates before Mt. Moon."></textarea>
+      </label>
+      <button class="v2-button" type="submit">Send suggestion</button>
+      <small>Requires login. Admins can review these from the existing suggestions area.</small>
+    </form>
+  </section>
+
+  <div class="v2-guide-app" id="v2-guide-app" data-v2-guide-app hidden>
+  <section class="v2-run-banner" aria-label="Run setup">
+    <div>
+      <p class="v2-kicker">Active guide</p>
+      <h2>{{ demo_run.title }}</h2>
+      <p>{{ demo_run.subtitle }}</p>
+    </div>
+    <div class="v2-rule-panel">
+      <button class="v2-mode-toggle active" type="button" data-guide-mode-toggle>
+        <span>Guide mode</span>
+        <strong>On</strong>
+      </button>
+      <div class="v2-version-choice" role="group" aria-label="Choose FireRed or LeafGreen">
+        <span>Version</span>
+        <div>
+          <button class="v2-version-toggle" type="button" data-version="firered">FireRed</button>
+          <button class="v2-version-toggle active" type="button" data-version="leafgreen">LeafGreen</button>
+        </div>
+      </div>
+      <button class="v2-rule-toggle" type="button" data-rule="trades">
+        <span>Trades</span>
+        <strong>Off</strong>
+      </button>
+      <button class="v2-rule-toggle" type="button" data-rule="pairedVersion">
+        <span>Own paired version</span>
+        <strong>Off</strong>
+      </button>
+      <button class="v2-rule-toggle" type="button" data-rule="events">
+        <span>Events allowed</span>
+        <strong>Off</strong>
+      </button>
+    </div>
+  </section>
+
+  <section class="v2-frlg-identity-strip" aria-label="FireRed and LeafGreen guide identity">
+    <div>
+      <span>Kanto field guide</span>
+      <strong>Built for a real cartridge run from Pallet to postgame.</strong>
+    </div>
+    <div class="v2-frlg-identity-chips">
+      <span>Version-aware tracking</span>
+      <span>Checklist + item gating</span>
+      <span>Pokédex-linked catch targets</span>
+    </div>
+  </section>
+
+  <section class="v2-stat-grid" aria-label="Run progress summary">
+    <div class="v2-stat-card v2-stat-card-setup">
+      <span>Run setup</span>
+      <strong id="v2-run-setup">LeafGreen · Starter pending</strong>
+      <small>Version plus guide choices when chosen</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Full dex owned</span>
+      <strong id="v2-dex-owned-count">0/{{ demo_stats.total }}</strong>
+      <small>Across all 151 Kanto entries</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Guide steps</span>
+      <strong id="v2-guide-step-count">0/{{ guide_stats.total_steps }}</strong>
+      <small>Timeline checklist progress</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Owned targets</span>
+      <strong id="v2-owned-count">{{ demo_stats.owned }}</strong>
+      <small>In the visible guide slice</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Catchable now</span>
+      <strong id="v2-catchable-count">{{ demo_stats.catchable }}</strong>
+      <small>Still possible in this run</small>
+    </div>
+    <div class="v2-stat-card">
+      <span>Blocked</span>
+      <strong id="v2-blocked-count">{{ demo_stats.blocked }}</strong>
+      <small>Explained, not forgotten</small>
+    </div>
+    <div class="v2-stat-card v2-stat-card-hot">
+      <span>Next target</span>
+      <strong id="v2-next-target">Loading</strong>
+      <small id="v2-next-method">Best next action</small>
+    </div>
+  </section>
+
+  <section class="v2-completion-review" aria-label="FR/LG completion review">
+    <div>
+      <p class="v2-kicker">Completion review</p>
+      <h2>What still needs attention?</h2>
+      <p>Use this as the quick FR/LG sanity check before moving to another checkpoint or calling the run complete.</p>
+    </div>
+    <div class="v2-review-grid">
+      <span><strong id="v2-review-caught">0</strong> caught</span>
+      <span><strong id="v2-review-catchable">0</strong> catchable</span>
+      <span><strong id="v2-review-chapters">0</strong> chapters reviewed</span>
+      <span><strong id="v2-review-items">0</strong> reminders checked</span>
+      <span><strong id="v2-review-blockers">0</strong> blockers explained</span>
+    </div>
+  </section>
+
+  <nav class="v2-tabs" id="v2-tabs" aria-label="V2 sections">
+    <button class="v2-tab active" type="button" data-v2-tab="guide">Guide</button>
+    <button class="v2-tab" type="button" data-v2-tab="pokedex">Pokédex</button>
+    <button class="v2-tab" type="button" data-v2-tab="type-chart">Type Chart</button>
+    <button class="v2-tab" type="button" data-v2-tab="items">Items</button>
+  </nav>
+
+  <section class="v2-guide v2-tab-panel active" id="v2-guide" data-v2-panel="guide" aria-label="FireRed and LeafGreen guide timeline">
+    <div class="v2-guide-head">
+      <div>
+        <p class="v2-kicker">FR/LG guide</p>
+        <h2>Full checkpoint timeline</h2>
+        <p>Follow the run from starter choice through Champion/postgame with practical warnings, catch targets, and blocker-aware tracking.</p>
+      </div>
+      <button class="v2-reset-button v2-reset-button-inline" type="button" id="v2-reset-guide">Reset guide progress</button>
+    </div>
+
+    <div class="v2-guide-layout">
+      <nav class="v2-timeline" aria-label="Guide checkpoints">
+        {% for chapter in guide_chapters %}
+        <button class="v2-timeline-step{% if loop.first %} active{% endif %}"
+                type="button"
+                data-chapter-id="{{ chapter.id }}">
+          <span class="v2-timeline-index">{{ loop.index }}</span>
+          <span>
+            <strong>{{ chapter.title }}</strong>
+            <small>{{ chapter.stage }}</small>
+          </span>
+          <em data-chapter-progress="{{ chapter.id }}">0/{{ chapter.guide_steps | length }}</em>
+        </button>
+        {% endfor %}
+      </nav>
+
+      <div class="v2-chapter-stack">
+        {% for chapter in guide_chapters %}
+        <article class="v2-chapter{% if loop.first %} active{% endif %}"
+                 data-chapter-panel="{{ chapter.id }}"
+                 data-chapter-title="{{ chapter.title }}">
+          <div class="v2-chapter-topline">
+            <span>{{ chapter.stage }}</span>
+            {% if chapter.boss %}
+            <strong>{{ chapter.boss.title }}: {{ chapter.boss.name }} · {{ chapter.boss.location }}</strong>
+            {% else %}
+            <strong>Guide checkpoint</strong>
+            {% endif %}
+          </div>
+          <h3>{{ chapter.title }}</h3>
+          <p>{{ chapter.subtitle }}</p>
+
+          {% if chapter.boss and chapter.boss.title.startswith('Gym') %}
+          <section class="v2-gym-helper" data-gym-helper="{{ chapter.boss.name | lower }}" aria-label="{{ chapter.boss.name }} battle helper">
+            <div class="v2-panel-title">
+              <span>{{ chapter.boss.title }} battle helper</span>
+              <strong>{{ chapter.boss.types | join(' / ') | title }}</strong>
+            </div>
+            <div class="v2-gym-helper-tagline">
+              <span>Battle plan</span>
+              <strong>Best current answers from your caught team</strong>
+            </div>
+            <p data-gym-summary="{{ chapter.boss.name | lower }}">Mark Pokémon caught in the Pokédex and this will suggest the best options you already have.</p>
+            <div class="v2-gym-picks" data-gym-picks="{{ chapter.boss.name | lower }}">
+              <span>No caught recommendations yet.</span>
+            </div>
+            <small data-gym-fallback="{{ chapter.boss.name | lower }}">Catch or mark relevant team members to unlock matchup suggestions.</small>
+          </section>
+          {% endif %}
+
+          {% if chapter.id == "pallet-town" %}
+          <div class="v2-inline-choice" role="group" aria-label="Choose starter at Pallet Town">
+            <span>Choose starter below</span>
+            <button class="v2-choice-toggle" type="button" data-choice-kind="starter" data-choice-value="bulbasaur">Bulbasaur</button>
+            <button class="v2-choice-toggle" type="button" data-choice-kind="starter" data-choice-value="charmander">Charmander</button>
+            <button class="v2-choice-toggle" type="button" data-choice-kind="starter" data-choice-value="squirtle">Squirtle</button>
+            <button class="v2-choice-clear" type="button" data-clear-choice="starter">Clear starter</button>
+          </div>
+          <div class="v2-starter-notes" aria-label="Starter pros and cons">
+            <article>
+              <strong>Bulbasaur</strong>
+              <span>Pros: easiest early gyms, strong into Brock and Misty. Cons: less exciting if you want a tougher early run.</span>
+            </article>
+            <article>
+              <strong>Charmander</strong>
+              <span>Pros: strong long-term Fire option and fun challenge start. Cons: hardest into Brock and still needs care into Misty.</span>
+            </article>
+            <article>
+              <strong>Squirtle</strong>
+              <span>Pros: comfortable into Brock, sturdy all-around Water pick. Cons: less direct advantage into Misty than Bulbasaur.</span>
+            </article>
+          </div>
+          {% endif %}
+
+          {% if chapter.id == "route-3-mt-moon" %}
+          <div class="v2-inline-choice" role="group" aria-label="Choose fossil at Mt. Moon">
+            <span>Mt. Moon fossil choice</span>
+            <button class="v2-choice-toggle" type="button" data-choice-kind="fossil" data-choice-value="helix">Helix Fossil</button>
+            <button class="v2-choice-toggle" type="button" data-choice-kind="fossil" data-choice-value="dome">Dome Fossil</button>
+          </div>
+          {% endif %}
+
+          {% if chapter.warnings %}
+          <div class="v2-warning-list" aria-label="{{ chapter.title }} warnings">
+            {% for warning in chapter.warnings %}
+            <div class="v2-warning-card">
+              <span>Watch out</span>
+              <p>{{ warning }}</p>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="v2-guide-columns">
+            <section class="v2-guide-panel" data-guide-panel-kind="checklist">
+              <div class="v2-panel-title">
+                <span>Checklist</span>
+                <strong data-local-step-count="{{ chapter.id }}">0/{{ chapter.guide_steps | length }}</strong>
+              </div>
+              <div class="v2-step-list">
+                {% for step in chapter.guide_steps %}
+                <label class="v2-guide-step" data-step-card="{{ step.id }}">
+                  <input type="checkbox"
+                         class="v2-guide-step-check"
+                         data-step-id="{{ step.id }}"
+                         data-chapter-id="{{ chapter.id }}"
+                         data-step-required="{{ 'false' if step.category == 'warning' else 'true' }}" />
+                  <span>
+                    <em>{{ step.category }}{% if step.category == "warning" %} · optional{% endif %}</em>
+                    <strong>{{ step.label }}</strong>
+                    <small>{{ step.detail }}</small>
+                  </span>
+                </label>
+                {% endfor %}
+              </div>
+            </section>
+
+            {% set chapter_items = guide_items_by_chapter.get(chapter.id, []) %}
+            {% if chapter_items %}
+            <section class="v2-guide-panel" data-guide-panel-kind="items">
+              <div class="v2-panel-title">
+                <span>Item reminders</span>
+                <strong>{{ chapter_items | length }}</strong>
+              </div>
+              <div class="v2-step-list">
+                {% for item in chapter_items %}
+                <label class="v2-item-card v2-item-card-compact">
+                  <input type="checkbox"
+                         class="v2-item-check"
+                         data-item-id="{{ item.id }}"
+                         data-chapter-id="{{ chapter.id }}"
+                         data-item-required="{{ 'false' if item.optional else 'true' }}" />
+                  <span>
+                    <em>
+                      <span class="v2-item-kind">{{ item.kind }}</span>
+                      <span class="v2-item-priority{% if item.optional %} optional{% endif %}">{{ 'optional' if item.optional else 'important' }}</span>
+                    </em>
+                    <strong>{{ item.label }}</strong>
+                    <small>{{ item.chapter }} · {{ item.detail }}</small>
+                  </span>
+                </label>
+                {% endfor %}
+              </div>
+            </section>
+            {% endif %}
+
+            <section class="v2-guide-panel" data-guide-panel-kind="targets">
+              <div class="v2-panel-title">
+                <span>Catch targets</span>
+                <strong data-target-count="{{ chapter.id }}">0/{{ chapter.pokemon_targets | length }}</strong>
+              </div>
+              <div class="v2-target-tools">
+                <span>Caught in this area</span>
+                <button type="button"
+                        class="v2-target-filter"
+                        data-target-filter-toggle="{{ chapter.id }}"
+                        aria-pressed="false">
+                  Show uncaught only
+                </button>
+              </div>
+              <div class="v2-target-list">
+                {% for target in chapter.pokemon_targets %}
+                <article class="v2-target-card"
+                         data-target-dex="{{ target.dex }}"
+                         data-target-chapter="{{ chapter.id }}"
+                         data-target-starter="{{ target.starter or '' }}"
+                         data-target-versions="{{ (target.versions | default([])) | join(',') }}"
+                         data-target-kind="{{ target.kind | default('catch') }}">
+                  <div class="v2-target-head">
+                    <div class="v2-target-sprite">
+                      <img src="{{ target.sprite_url }}"
+                           data-fallback-src="{{ target.sprite_fallback_url }}"
+                           alt="{{ target.name }} sprite"
+                           loading="lazy"
+                           onerror="if (this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.dataset.fallbackSrc = ''; } else { this.closest('.v2-target-sprite').classList.add('missing'); this.remove(); }" />
+                    </div>
+                    <div class="v2-target-main">
+                      <div class="v2-target-title-row">
+                        <span>#{{ "%03d" | format(target.dex) }} {{ target.name }}</span>
+                        <label class="v2-target-check">
+                          <input class="v2-target-caught"
+                                 type="checkbox"
+                                 data-target-dex="{{ target.dex }}"
+                                 data-target-chapter="{{ chapter.id }}" />
+                          <span>caught</span>
+                        </label>
+                      </div>
+                      <div class="v2-target-summary-row">
+                        <strong>{{ target.where }}</strong>
+                        <small>{{ target.when }}</small>
+                      </div>
+                      <small>{{ target.version_note }}</small>
+                    </div>
+                  </div>
+                  {% set target_meta = [
+                    ('Method', target.method),
+                    ('Rarity', target.rarity),
+                    ('Levels', target.levels),
+                    ('When', target.timing)
+                  ] %}
+                  {% if target_meta | selectattr(1) | list %}
+                  <div class="v2-target-meta" aria-label="{{ target.name }} encounter details">
+                    {% for label, value in target_meta if value %}
+                    <span>{{ label }}: {{ value }}</span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  <p>{{ target.why_it_matters }}</p>
+                  {% if target.tip %}
+                  <p class="v2-target-tip">{{ target.tip }}</p>
+                  {% endif %}
+                  <em data-target-status="{{ target.dex }}">Status pending</em>
+                  <div class="v2-target-buttons">
+                    <button class="v2-target-open" type="button" data-target-open="{{ target.dex }}">Pokédex</button>
+                    <button class="v2-target-open" type="button" data-target-info="{{ target.dex }}">Full info</button>
+                  </div>
+                </article>
+                {% endfor %}
+              </div>
+            </section>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="v2-type-chart v2-tab-panel" id="v2-type-chart" data-v2-panel="type-chart" aria-label="Type chart">
+    <div class="v2-guide-head">
+      <div>
+        <p class="v2-kicker">Type chart</p>
+        <h2>What hits what</h2>
+        <p>Use this when you are planning a fight and need quick FireRed/LeafGreen attack matchups. Fairy type is intentionally omitted for Gen 3.</p>
+      </div>
+    </div>
+    <div class="v2-type-controls">
+      <div class="v2-type-mode-group" role="tablist" aria-label="Type chart mode">
+        <button class="v2-type-mode active" type="button" data-type-mode="offense">Offense</button>
+        <button class="v2-type-mode" type="button" data-type-mode="defense">Defense</button>
+      </div>
+      <input id="v2-type-search" class="v2-type-search" type="search" placeholder="Filter types..." aria-label="Filter type chart" />
+    </div>
+    <div class="v2-type-table" id="v2-type-grid" role="table" aria-label="Gen 3 type chart">
+      {% for row in type_chart %}
+      {% set search_blob = (
+           row.type_name ~ ' ' ~
+           (row.offense_super | join(' ')) ~ ' ' ~
+           (row.offense_not | join(' ')) ~ ' ' ~
+           (row.offense_immune | join(' ')) ~ ' ' ~
+           (row.defense_weak | join(' ')) ~ ' ' ~
+           (row.defense_resist | join(' ')) ~ ' ' ~
+           (row.defense_immune | join(' '))
+         ) | lower %}
+      <div class="v2-type-row" role="row" data-type-name="{{ row.type_name }}" data-search-text="{{ search_blob }}">
+        <div class="v2-type-attack" role="cell">
+          <span class="type-badge" style="background: {{ row.type_color }}">{{ row.type_name }}</span>
+        </div>
+        <div class="v2-type-col v2-type-col-offense" role="cell">
+          <div class="v2-type-col-label">2×</div>
+          <div class="v2-type-chips">
+            {% if row.offense_super %}
+              {% for t in row.offense_super %}<span class="type-badge type-badge-se">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">—</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-offense" role="cell">
+          <div class="v2-type-col-label">½×</div>
+          <div class="v2-type-chips">
+            {% if row.offense_not %}
+              {% for t in row.offense_not %}<span class="type-badge type-badge-nve">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">—</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-offense" role="cell">
+          <div class="v2-type-col-label">0×</div>
+          <div class="v2-type-chips">
+            {% if row.offense_immune %}
+              {% for t in row.offense_immune %}<span class="type-badge type-badge-immune">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">—</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-defense v2-type-hidden-col" role="cell">
+          <div class="v2-type-col-label">Weak to 2×</div>
+          <div class="v2-type-chips">
+            {% if row.defense_weak %}
+              {% for t in row.defense_weak %}<span class="type-badge type-badge-se">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">—</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-defense v2-type-hidden-col" role="cell">
+          <div class="v2-type-col-label">Resists ½×</div>
+          <div class="v2-type-chips">
+            {% if row.defense_resist %}
+              {% for t in row.defense_resist %}<span class="type-badge type-badge-nve">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">—</span>{% endif %}
+          </div>
+        </div>
+        <div class="v2-type-col v2-type-col-defense v2-type-hidden-col" role="cell">
+          <div class="v2-type-col-label">Immune 0×</div>
+          <div class="v2-type-chips">
+            {% if row.defense_immune %}
+              {% for t in row.defense_immune %}<span class="type-badge type-badge-immune">{{ t }}</span>{% endfor %}
+            {% else %}<span class="v2-type-empty">—</span>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="v2-type-note">Fairy type is excluded for Gen 3 accuracy.</p>
+  </section>
+
+  <section class="v2-items v2-tab-panel" id="v2-items" data-v2-panel="items" aria-label="Item checklist">
+    <div class="v2-guide-head">
+      <div>
+        <p class="v2-kicker">Items</p>
+        <h2>Route item reminders</h2>
+        <p>This starts with the early-game item path. It is local-only for now, just like guide and dex status.</p>
+      </div>
+    </div>
+    <div class="v2-item-list">
+      {% for item in guide_items %}
+      <label class="v2-item-card">
+        <input type="checkbox" class="v2-item-check" data-item-id="{{ item.id }}" />
+        <span>
+          <em>{{ item.kind }}{% if item.optional %} · optional{% else %} · important{% endif %}</em>
+          <strong>{{ item.label }}</strong>
+          <small>{{ item.chapter }} · {{ item.detail }}</small>
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="v2-board v2-tab-panel" id="v2-board" data-v2-panel="pokedex" aria-label="Pokédex">
+    <div class="v2-board-head">
+      <div>
+        <p class="v2-kicker">Pokédex</p>
+        <h2>Game-aware Pokédex</h2>
+        <p>Use this when you want Pokémon info for this FireRed/LeafGreen run without following the guide timeline.</p>
+        <div class="v2-pokedex-choice" role="group" aria-label="Choose starter from the Pokédex">
+          <span>Starter choice</span>
+          <button class="v2-choice-toggle" type="button" data-choice-kind="starter" data-choice-value="bulbasaur">Bulbasaur</button>
+          <button class="v2-choice-toggle" type="button" data-choice-kind="starter" data-choice-value="charmander">Charmander</button>
+          <button class="v2-choice-toggle" type="button" data-choice-kind="starter" data-choice-value="squirtle">Squirtle</button>
+          <button class="v2-choice-clear" type="button" data-clear-choice="starter">Clear starter</button>
+        </div>
+      </div>
+      <div class="v2-toolbar" role="toolbar" aria-label="V2 filters">
+        <input id="v2-search" class="v2-search" type="search" placeholder="Search Pokémon or blocker..." aria-label="Search V2 preview" />
+        <button class="v2-chip active" data-filter="all" type="button">All</button>
+        <button class="v2-chip" data-filter="catchable" type="button">Catchable</button>
+        <button class="v2-chip" data-filter="owned" type="button">Owned</button>
+        <button class="v2-chip" data-filter="blocked" type="button">Blocked</button>
+        <button class="v2-chip" data-filter="trade-evo" type="button">Trade</button>
+        <button class="v2-chip" data-filter="starter" type="button">Starter</button>
+        <button class="v2-chip" data-filter="fossil" type="button">Fossil</button>
+        <button class="v2-chip" data-filter="version-exclusive" type="button">Version</button>
+        <button class="v2-chip" data-filter="legendary" type="button">Legendary</button>
+      </div>
+    </div>
+
+    <div class="v2-board-layout">
+      <div class="v2-card-grid" id="v2-card-grid">
+        {% for p in demo_entries %}
+        <article
+          class="v2-pokemon-card status-{{ p.status }}"
+          role="button"
+          tabindex="0"
+          data-name="{{ p.name | lower }}"
+          data-dex="{{ p.dex }}"
+          data-status="{{ p.status }}"
+          data-base-status="{{ p.status }}"
+          data-method="{{ p.method | lower }}"
+          data-blocker="{{ p.blocker | lower }}"
+          data-base-blocker="{{ p.blocker }}"
+          data-tags="{{ p.tags | join(',') }}"
+          data-requirements="{{ p.requirements | join(',') }}"
+          data-available-versions="{{ p.available_versions | join(',') }}"
+          data-note="{{ p.note }}"
+          data-display-name="{{ p.name }}"
+          data-display-method="{{ p.method }}"
+          data-display-blocker="{{ p.blocker }}"
+          data-types="{{ p.types | join(',') }}"
+        >
+          <button class="v2-card-info"
+                  type="button"
+                  data-pokedex-info="{{ p.dex }}"
+                  aria-label="Open full info for {{ p.name }}">Info</button>
+          <label class="v2-card-caught" aria-label="Mark {{ p.name }} caught">
+            <input type="checkbox" data-pokedex-caught="{{ p.dex }}" />
+            <span>Caught</span>
+          </label>
+          <div class="v2-card-sprite">
+            <img class="v2-pokemon-sprite"
+                 src="{{ p.sprite_url }}"
+                 data-fallback-src="{{ p.sprite_fallback_url }}"
+                 alt="{{ p.name }} sprite"
+                 loading="lazy"
+                 decoding="async"
+                 onerror="if (this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.dataset.fallbackSrc = ''; } else { this.closest('.v2-card-sprite').classList.add('missing'); this.remove(); }" />
+          </div>
+          <span class="v2-card-number">#{{ "%03d" | format(p.dex) }}</span>
+          <span class="v2-card-name">{{ p.name }}</span>
+          <span class="v2-card-types">
+            {% for type_name in p.types %}
+            <em>{{ type_name | title }}</em>
+            {% endfor %}
+          </span>
+          <span class="v2-card-method">{{ p.method }}</span>
+          {% if p.blocker %}
+          <span class="v2-card-blocker">{{ p.blocker }}</span>
+          {% else %}
+          <span class="v2-card-ready">In play</span>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>
+
+      <aside class="v2-detail-panel" aria-live="polite">
+        <p class="v2-kicker">Selected entry</p>
+        <h3 id="v2-detail-name">Pick a Pokémon</h3>
+        <p id="v2-detail-summary">Select a card to see why it is catchable, owned, or blocked in this run.</p>
+        <div class="v2-detail-meta">
+          <span id="v2-detail-status">Status: waiting</span>
+          <span id="v2-detail-types">Types: none</span>
+          <span id="v2-detail-method">Method: none</span>
+          <span id="v2-detail-blocker">Blocker: none</span>
+          <span id="v2-detail-version">Version: none</span>
+        </div>
+        <div class="v2-status-actions" aria-label="Set selected Pokemon status">
+          <button type="button" data-set-status="catchable">Catchable</button>
+          <button type="button" data-set-status="owned">Owned</button>
+          <button type="button" data-set-status="caught">Caught</button>
+          <button type="button" data-set-status="blocked">Blocked</button>
+        </div>
+        <button class="v2-reset-button" type="button" id="v2-reset-run">Reset local V2 progress</button>
+      </aside>
+    </div>
+  </section>
+
+  <section class="v2-safety-strip">
+    <div>
+      <p class="v2-kicker">Migration track</p>
+      <h2>V1 data stays safe</h2>
+      <p>This preview is intentionally separate from the old tracker. The real build should ship import preview, JSON export, import logs, and rollback before users move over.</p>
+    </div>
+    <div class="v2-safety-steps">
+      <span>1. Upload V1 DB</span>
+      <span>2. Preview import</span>
+      <span>3. Copy into V2</span>
+      <span>4. Export backup</span>
+    </div>
+  </section>
+  </div>
+</main>
+
+<script src="/static/v2-preview.js?v={{ js_v }}"></script>
+{% endblock %}

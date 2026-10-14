@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Trainer Ledger — Pokemon Tracker and Guides{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="hero hero-launch">
+    <div class="launch-badge">Public beta</div>
+    <h1 class="hero-title">&#9670; Trainer Ledger</h1>
+    <p class="hero-sub">A fan-made Pokemon tracker and guide hub built for full runs, regional dex progress, route planning, and the one-time decisions that matter across the whole series.</p>
+
+    <div class="launch-actions">
+      <a href="/v2" class="launch-cta launch-cta-primary">Open V2 Guides</a>
+      <a href="/updates" class="launch-cta">See What’s New</a>
+      <a href="/support" class="launch-cta">Support the Project</a>
+    </div>
+
+    <div class="launch-grid">
+      <section class="launch-panel">
+        <div class="launch-panel-kicker">Why this exists</div>
+        <h2 class="launch-panel-title">Built for real runs, not just checkmarks</h2>
+        <p class="launch-panel-copy">Use one place to track catches, key items, version splits, hidden one-time calls, and the route decisions that shape a full playthrough.</p>
+        <ul class="launch-list">
+          <li>Guide-first game pages across the main series</li>
+          <li>Regional-dex-first progress before National Dex unlocks</li>
+          <li>Catch targets, reminders, secrets, and completion review</li>
+        </ul>
+      </section>
+
+      <section class="launch-panel launch-panel-accent">
+        <div class="launch-panel-kicker">Phase 1</div>
+        <h2 class="launch-panel-title">A public home for the project is live</h2>
+        <p class="launch-panel-copy">Trainer Ledger is moving from a personal build into a fan-facing web app. V2 guides are already playable, and support links are ready for the next production step.</p>
+        <div class="launch-panel-actions">
+          <a href="/support" class="filter-pill active">Donate or contact</a>
+          {% if public_url %}
+          <span class="launch-public-url">Public URL: {{ public_url }}</span>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+
+    <div class="public-wip-banner" role="note" aria-label="Work in progress notice">
+      <strong>Work in progress:</strong> Trainer Ledger is already usable, but the public site, V2 save system, and account tools are still being actively upgraded.
+    </div>
+
+    <!-- Global stats dashboard -->
+    <div class="dash-grid">
+
+      <!-- Overall progress ring + % -->
+      <div class="dash-card dash-ring-card">
+        <svg class="ring-svg" viewBox="0 0 80 80" aria-hidden="true">
+          <circle class="ring-bg"    cx="40" cy="40" r="32" />
+          <circle class="ring-fill"  cx="40" cy="40" r="32"
+            stroke-dasharray="{{ (dash.pct / 100 * 201.06) | round(1) }} 201.06"
+            stroke="#ffc107" />
+        </svg>
+        <div class="ring-label">
+          <div class="ring-pct">{{ dash.pct }}%</div>
+          <div class="ring-sub">overall</div>
+        </div>
+      </div>
+
+      <!-- Caught stat -->
+      <div class="dash-card">
+        <div class="dash-num">{{ dash.caught | int }}</div>
+        <div class="dash-label">caught</div>
+        <div class="dash-sub">of {{ dash.total }}</div>
+      </div>
+
+      <!-- Games tracked -->
+      <div class="dash-card">
+        <div class="dash-num">{{ dash.games_tracked }}</div>
+        <div class="dash-label">games tracked</div>
+        <div class="dash-sub">of {{ dash.total_games }} total</div>
+      </div>
+
+      <!-- Shiny count -->
+      {% if dash.shiny > 0 %}
+      <div class="dash-card">
+        <div class="dash-num" style="color:#ffd700">{{ dash.shiny }}</div>
+        <div class="dash-label">✨ shiny caught</div>
+        <div class="dash-sub">across all games</div>
+      </div>
+      {% endif %}
+
+      {% if dash.best and dash.best.caught > 0 %}
+      <!-- Best game -->
+      {% set best_pct = ((dash.best.caught / dash.best.total) * 100) | int %}
+      <div class="dash-card dash-card-accent" style="--accent: {{ dash.best.color }}">
+        <div class="dash-label">&#127942; leading</div>
+        <div class="dash-game-name" style="color: {{ dash.best.color }}">{{ dash.best.name }}</div>
+        <div class="dash-sub">{{ best_pct }}% &bull; {{ dash.best.caught }}/{{ dash.best.total }}</div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <div class="public-strip">
+    <div class="public-strip-card">
+      <div class="public-strip-kicker">V2 status</div>
+      <div class="public-strip-title">Guide-first tracker in active buildout</div>
+      <div class="public-strip-copy">The newest pages are built to work like real playthrough companions, and more production polish is landing now.</div>
+    </div>
+    <div class="public-strip-card">
+      <div class="public-strip-kicker">Support</div>
+      <div class="public-strip-title">Help fund hosting and more guides</div>
+      <div class="public-strip-copy">If Trainer Ledger helps your runs, support keeps Railway, guide research, and design upgrades moving.</div>
+      <a href="/support" class="public-strip-link">Open support page</a>
+    </div>
+    <div class="public-strip-card">
+      <div class="public-strip-kicker">Roadmap</div>
+      <div class="public-strip-title">Public app transition has started</div>
+      <div class="public-strip-copy">Phase 1 focuses on public pages, support surfaces, and production readiness without rebuilding the core app.</div>
+      <a href="/updates" class="public-strip-link">Follow updates</a>
+    </div>
+  </div>
+
+  {% set gens = games | groupby("gen") %}
+  {% for gen, gen_games in gens %}
+  <div class="gen-section">
+
+    <div class="section-header">
+      <span class="section-title">
+        {% if gen == 99 %}Mobile &amp; Apps{% else %}Generation {{ gen }}{% endif %}
+      </span>
+    </div>
+
+    <div class="shelf">
+      {% for game in gen_games %}
+      <a href="/game/{{ game.id }}" class="shelf-item" title="{{ game.name }}">
+
+        <!-- Cart image(s) -->
+        <div class="shelf-carts">
+          <img src="{{ game.cart_img }}" alt="{{ game.name }}" class="shelf-cart
+               {%- if game.cart_img_b %} cart-lean-left{% endif %}"/>
+          {% if game.cart_img_b %}
+          <img src="{{ game.cart_img_b }}" alt="{{ game.name }} alt" class="shelf-cart cart-lean-right"/>
+          {% endif %}
+
+          {% if game.cached and game.total > 0 %}
+            {% set pct = ((game.caught / game.total) * 100) | int %}
+            {% if pct == 100 %}
+              <span class="completion-badge" title="Completed!">&#127942;</span>
+            {% elif pct >= 75 %}
+              <span class="completion-badge" title="75%+ complete!">&#129351;</span>
+            {% elif pct >= 50 %}
+              <span class="completion-badge" title="50%+ complete!">&#129352;</span>
+            {% elif pct >= 25 %}
+              <span class="completion-badge" title="25%+ complete!">&#129353;</span>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        <!-- Label -->
+        <div class="shelf-label">
+          <div class="shelf-name">{{ game.name }}</div>
+          {% if game.cached and game.total > 0 %}
+            {% set pct = ((game.caught / game.total) * 100) | int %}
+            <div class="shelf-pct pct-readable" style="color: {{ game.text_color or '#ffffff' }}">{{ pct }}%</div>
+            <div class="shelf-bar-track">
+              <div class="shelf-bar-fill" style="width:{{ pct }}%; background:{{ game.color }}"></div>
+            </div>
+            {% if game.last_updated %}
+            <div class="shelf-last-updated">{{ game.last_updated | relative_time }}</div>
+            {% endif %}
+          {% else %}
+            <div class="shelf-pct" style="color: var(--text-dim)">&#8212;</div>
+          {% endif %}
+        </div>
+
+      </a>
+      {% endfor %}
+    </div>
+
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}

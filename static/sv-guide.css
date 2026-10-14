@@ -1,0 +1,281 @@
+/* Keep the Paldea guide independent of older dashboard layout overrides. */
+.sv-school-task { padding: 16px 0; border-bottom: 1px solid #d8cabb; }
+.sv-school-task label { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.sv-school-task input { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--sv-accent); }
+.sv-school-task p { margin: 8px 0; }
+.sv-exam-answers { padding-left: 28px; line-height: 1.8; }
+.sv-enemy-roster { padding: 0; list-style: none; }
+.sv-enemy-roster li { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 0; border-bottom: 1px solid #d8cabb; }
+.sv-enemy-roster strong { flex: 1 1 130px; }
+.sv-school-visit { padding: 18px; margin: 16px 0; border-left: 4px solid var(--sv-accent); background: var(--sv-soft); color: #242437; }
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] {
+  --sv-accent: #a63a13;
+  --sv-soft: #fff0de;
+  --sv-ink: #242437;
+  --sv-line: #d8cabb;
+  background: #faf7ef;
+  color: #172033;
+  --v2-accent: var(--sv-accent);
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"][data-sv-version="violet"] {
+  --sv-accent: #633595;
+  --sv-soft: #f0eafa;
+  --sv-line: #d1c6e0;
+  background: #f7f5fb;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"]::before {
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0 31px, #7777770b 31px 32px);
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-run-banner::before,
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-run-banner::after {
+  display: none;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-run-banner[aria-label] {
+  display: block;
+  border: 1px solid var(--sv-line);
+  border-top: 8px solid var(--sv-accent);
+  background: #fff;
+  padding: clamp(18px, 3vw, 36px);
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-run-banner :is(p, span, strong, b) {
+  color: var(--sv-ink);
+  opacity: 1;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-run-banner .v2-kicker {
+  color: var(--sv-accent);
+  font-family: ui-monospace, monospace;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-guide-title {
+  font-size: clamp(30px, 4vw, 52px);
+  color: var(--sv-ink);
+  letter-spacing: -0.04em;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] :is(.v2-pokedex-choice, .v2-version-choice) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--sv-soft);
+  padding: 16px;
+  border: 1px solid var(--sv-line);
+  position: relative;
+  isolation: isolate;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-pokedex-choice > span {
+  flex-basis: 100%;
+  color: var(--sv-ink);
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] :is(.v2-generic-starter-toggle, .v2-generic-version-toggle, .v2-choice-clear, .v2-guide-header-actions .v2-button) {
+  position: relative;
+  background: #fff;
+  color: var(--sv-ink);
+  border: 2px solid var(--sv-line);
+  min-height: 44px;
+  opacity: 1;
+  cursor: pointer;
+  text-shadow: none;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-generic-starter-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 160px;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-generic-starter-toggle img {
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] :is(.v2-generic-starter-toggle, .v2-generic-version-toggle).active {
+  background: var(--sv-accent);
+  color: #fff;
+  border-color: var(--sv-accent);
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-generic-starter-toggle.active span {
+  color: #fff;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] button:focus-visible {
+  outline: 3px solid var(--sv-accent);
+  outline-offset: 4px;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-generic-starter-profiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-generic-starter-profiles article {
+  background: #fff;
+  border: 1px solid var(--sv-line);
+  border-top: 4px solid #23814a;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-generic-starter-profiles article[data-generic-starter-profile="909"] { border-top-color: #bd3e2d; }
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-generic-starter-profiles article[data-generic-starter-profile="912"] { border-top-color: #2469a5; }
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-stat-card::before { background: var(--sv-accent); }
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-rule-panel { margin-top: 20px; }
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .sv-selection-status { font-weight: 700; }
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-stat-card strong {
+  font-family: inherit;
+  font-size: clamp(22px, 2.6vw, 34px);
+  overflow-wrap: anywhere;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-console-layout {
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 1280px;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-guide-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  width: 100%;
+  overflow: visible;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] :is(.v2-main-column, .v2-chapter-stack, .v2-guide-sidebar) {
+  min-width: 0;
+  width: 100%;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] :is(.v2-run-banner, .v2-guide, .v2-stat-card, .v2-chapter, .v2-target-card, .v2-item-card, .v2-guide-callout-body, .v2-guide-walkthrough-step, .v2-guide-accordion, .v2-guide-objective-banner) {
+  background: #fff;
+  color: #172033;
+  border: 1px solid #cbd5e1;
+  box-shadow: none;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] :is(.v2-chapter, .v2-timeline-step, .v2-stat-card) :is(strong, small, p, span, em, h3) {
+  color: #172033;
+  text-shadow: none;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-chapter > h3 {
+  width: 100%;
+  max-width: none;
+  overflow-wrap: normal;
+  background: var(--sv-accent);
+  color: #fff;
+  padding: 16px;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-timeline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-timeline-step {
+  position: static;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-timeline-step.active {
+  background: var(--sv-soft);
+  border-color: var(--sv-accent);
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-guide-accordion-summary {
+  cursor: pointer;
+  color: #172033;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-guide-accordion-body a {
+  color: var(--sv-accent);
+  text-decoration: underline;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-target-head {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-target-main {
+  grid-column: 1 / -1;
+  min-width: 0;
+  width: 100%;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-target-summary-row {
+  display: block;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-target-summary-row strong {
+  font-size: 15px;
+  text-transform: none;
+  overflow-wrap: anywhere;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-target-meta span {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1024px) {
+  .v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-guide-layout {
+    grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
+  }
+  .v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-guide-sidebar {
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-generic-starter-profiles { grid-template-columns: minmax(0, 1fr); }
+  .v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-run-banner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-guide-sidebar {
+    max-height: 280px;
+    overflow-y: auto;
+  }
+}
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] [data-sv-battle][hidden] {
+  display: none !important;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-starter-team-plan,
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-starter-team-route-step,
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-starter-team-grid > article {
+  background: #fff;
+  color: #24313d;
+  border: 1px solid #ccd3d9;
+  box-shadow: none;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-starter-team-plan :is(strong, span, p, b) {
+  color: #24313d;
+}
+
+.v2-guide-shell[data-v2-game-id="scarlet-violet"] .v2-starter-team-plan a {
+  color: var(--sv-accent);
+  text-decoration: underline;
+}

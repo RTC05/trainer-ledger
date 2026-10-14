@@ -1,0 +1,20 @@
+<section class="sv-battle-prep" aria-label="{{ chapter.title }} enemy teams">
+  {% for battle in chapter.battle_briefings %}
+  <details class="v2-guide-accordion" data-sv-battle{% if battle.version %} data-sv-battle-version="{{ battle.version }}"{% endif %}{% if battle.starter %} data-sv-battle-starter="{{ battle.starter }}"{% endif %}>
+    <summary class="v2-guide-accordion-summary">Battle prep · {{ battle.name }}</summary>
+    <div class="v2-guide-accordion-body">
+      {% if battle.starter %}<p>For players who chose {{ {906: 'Sprigatito', 909: 'Fuecoco', 912: 'Quaxly'}[battle.starter] }}. Choose your starter above to show only your matching team.</p>{% endif %}
+      <p>{{ battle.advice }}</p>
+      <ul class="sv-enemy-roster">
+        {% for foe in battle.team %}
+        <li><strong>{{ foe.name }}</strong><span>Lv. {{ foe.level }}</span><span>{{ foe.types | join(' / ') | title }}{% if foe.tera %} → Tera {{ foe.tera | title }}{% endif %}</span></li>
+        {% endfor %}
+        {% if battle.vehicle %}
+        <li><strong>Starmobile</strong><span>Lv. {{ battle.vehicle.level }}</span><span>{{ battle.vehicle.type | title }} · special boss vehicle</span></li>
+        {% endif %}
+      </ul>
+      <p>First-clear roster, not a catch list or a rematch team. Tera labels show the changed defensive typing; abilities and existing attacks still matter.</p>
+    </div>
+  </details>
+  {% endfor %}
+</section>

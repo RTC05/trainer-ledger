@@ -1,0 +1,193 @@
+/* ─────────────────────────────────────────────
+   Team Builder + Catch Rate Calculator Styles
+   ─────────────────────────────────────────────*/
+
+/* ── Page layout ── */
+.tb-page { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.tb-header {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 24px; flex-wrap: wrap;
+}
+.tb-back { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; transition: color .15s; }
+.tb-back:hover { color: var(--text); }
+.tb-title { font-size: 22px; font-weight: 800; }
+.tb-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.tb-suggest-btn {
+  margin-left: auto; padding: 9px 18px;
+  background: var(--pokeyellow); color: #0a0a12;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+.tb-suggest-btn:hover  { background: #ffd740; transform: translateY(-1px); }
+.tb-suggest-btn:active { transform: translateY(0); }
+.tb-suggest-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+/* ── Two-column layout ── */
+.tb-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .tb-layout { grid-template-columns: 1fr; } }
+
+/* ── Team slots ── */
+.team-slots {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+  margin-bottom: 20px;
+}
+@media (max-width: 600px) { .team-slots { grid-template-columns: repeat(3, 1fr); } }
+.team-slot {
+  background: var(--surface); border: 2px dashed var(--border2);
+  border-radius: var(--radius); padding: 10px 6px 8px;
+  text-align: center; cursor: pointer; position: relative;
+  transition: border-color .15s, background .15s;
+  min-height: 110px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+}
+.team-slot.filled {
+  border-style: solid; border-color: var(--pokeyellow);
+  background: var(--surface2);
+}
+.team-slot.filled:hover { border-color: #ef5350; }
+.team-slot-num   { font-size: 10px; color: var(--text-dim); position: absolute; top: 5px; left: 7px; }
+.team-slot-empty { font-size: 26px; opacity: .18; }
+.team-slot-sprite { width: 60px; height: 60px; image-rendering: pixelated; }
+.team-slot-name  { font-size: 10px; color: var(--text-muted); text-transform: capitalize; font-weight: 600; }
+.team-slot-types { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+.team-slot-remove {
+  position: absolute; top: 3px; right: 5px;
+  background: none; border: none; color: var(--text-dim);
+  font-size: 14px; cursor: pointer; line-height: 1;
+  opacity: 0; transition: opacity .15s;
+}
+.team-slot.filled:hover .team-slot-remove { opacity: 1; }
+
+/* ── Section card ── */
+.tb-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 16px;
+}
+.tb-card-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--text-muted); margin-bottom: 12px;
+}
+
+/* ── Coverage grids ── */
+.coverage-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.coverage-chip {
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; color: #fff; text-transform: capitalize;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+.coverage-chip.dim { opacity: .25; }
+.no-coverage { font-size: 12px; color: var(--text-dim); font-style: italic; }
+
+/* ── Weaknesses ── */
+.weak-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.weak-type-name {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px;
+  color: #fff; text-transform: capitalize; text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  width: 80px; flex-shrink: 0; text-align: center;
+}
+.weak-count { font-size: 11px; color: var(--text-dim); width: 70px; flex-shrink: 0; }
+.weak-bar-track { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.weak-bar-fill  { height: 100%; border-radius: 3px; }
+
+/* ── Gym matchup table ── */
+.gym-table { width: 100%; border-collapse: collapse; }
+.gym-table th {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text-dim); font-weight: 700;
+  padding: 4px 8px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.gym-row { border-bottom: 1px solid rgba(255,255,255,.03); transition: background .1s; }
+.gym-row:hover { background: var(--surface2); }
+.gym-cell { padding: 7px 8px; font-size: 12px; vertical-align: middle; }
+.gym-leader { font-weight: 600; }
+.gym-title  { font-size: 10px; color: var(--text-muted); }
+.gym-type-chips { display: flex; flex-wrap: wrap; gap: 3px; }
+.gym-counters   { display: flex; flex-wrap: wrap; gap: 3px; }
+.gym-counter-sprite { width: 36px; height: 36px; image-rendering: pixelated; }
+.gym-rating { font-size: 11px; font-weight: 700; text-align: center; }
+.gym-rating.great  { color: #4caf50; }
+.gym-rating.ok     { color: #ffc107; }
+.gym-rating.rough  { color: #ef5350; }
+.gym-empty { text-align: center; color: var(--text-dim); font-size: 12px;
+             padding: 20px; font-style: italic; }
+
+/* ── Roster filter bar ── */
+.roster-bar {
+  display: flex; gap: 8px; align-items: center;
+  flex-wrap: wrap; margin-bottom: 12px;
+}
+.roster-search {
+  flex: 1; min-width: 150px; max-width: 240px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text); border-radius: var(--radius-sm);
+  padding: 7px 10px 7px 30px; font-size: 12px; font-family: inherit;
+}
+.roster-search:focus { outline: none; border-color: rgba(255,193,7,.4); }
+.roster-wrap { position: relative; }
+.roster-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+               color: var(--text-dim); font-size: 13px; pointer-events: none; }
+.roster-count { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+
+/* ── Roster grid ── */
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 6px; max-height: 480px; overflow-y: auto;
+  padding-right: 4px;
+}
+.roster-grid::-webkit-scrollbar { width: 4px; }
+.roster-grid::-webkit-scrollbar-track { background: transparent; }
+.roster-grid::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+.roster-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 6px 4px 5px;
+  text-align: center; cursor: pointer;
+  transition: border-color .15s, background .15s, opacity .15s;
+  user-select: none;
+}
+.roster-card:hover  { border-color: var(--pokeyellow); background: var(--card); }
+.roster-card.on-team { border-color: rgba(76,175,80,.5); background: var(--green-dark); opacity: .6; cursor: not-allowed; }
+.roster-card.hidden  { display: none !important; }
+.roster-num    { font-size: 9px; color: var(--text-dim); margin-bottom: 2px; }
+.roster-sprite { width: 52px; height: 52px; image-rendering: pixelated; margin: 0 auto; }
+.roster-name   { font-size: 10px; font-weight: 600; text-transform: capitalize; color: var(--text-muted);
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+/* ── Empty / loading states ── */
+.tb-empty {
+  text-align: center; padding: 60px 20px;
+  color: var(--text-muted); font-size: 14px;
+}
+.tb-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: .4; }
+.tb-loading { display: flex; align-items: center; justify-content: center; gap: 10px;
+              padding: 40px; color: var(--text-dim); font-size: 13px; }
+.tb-spinner { width: 24px; height: 24px; border: 3px solid var(--border2);
+              border-top-color: var(--pokeyellow); border-radius: 50%;
+              animation: spin .7s linear infinite; }
+
+/* ── Catch Rate Calculator (in drawer) ── */
+.cr-section { margin-bottom: 20px; }
+.cr-row     { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.cr-label   { font-size: 11px; color: var(--text-dim); width: 70px; flex-shrink: 0; }
+.cr-select {
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text); border-radius: 6px; padding: 5px 8px;
+  font-size: 12px; font-family: inherit; flex: 1;
+}
+.cr-select:focus { outline: none; border-color: rgba(255,193,7,.4); }
+.cr-slider { flex: 1; accent-color: var(--pokeyellow); }
+.cr-slider-val { font-size: 12px; color: var(--pokeyellow); font-weight: 700; width: 36px; text-align: right; }
+.cr-result {
+  background: var(--surface2); border-radius: 10px;
+  padding: 12px 14px; display: flex; gap: 20px; align-items: center;
+  flex-wrap: wrap;
+}
+.cr-pct   { font-size: 28px; font-weight: 800; line-height: 1; }
+.cr-pct.great  { color: #4caf50; }
+.cr-pct.ok     { color: #ffc107; }
+.cr-pct.hard   { color: #ef5350; }
+.cr-throws { font-size: 12px; color: var(--text-muted); }
+.cr-throws strong { color: var(--text); }
+.cr-base   { font-size: 11px; color: var(--text-dim); margin-top: 2px; }

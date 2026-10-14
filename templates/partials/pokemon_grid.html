@@ -1,0 +1,14 @@
+{% if grouped_regions %}
+  {% include "partials/pokemon_grid_regions.html" %}
+{% elif pokemon_list %}
+<div class="poke-grid">
+  {% for p in pokemon_list %}
+  {% include "partials/poke_card.html" %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">&#128269;</div>
+  <div class="empty-text">No Pok&eacute;mon found. Try a different search or filter.</div>
+</div>
+{% endif %}

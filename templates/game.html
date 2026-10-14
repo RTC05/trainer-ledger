@@ -1,0 +1,1008 @@
+{% extends "base.html" %}
+{% block title %}{{ game.name }} — Trainer Ledger{% endblock %}
+
+{% block content %}
+<script>
+  // Global constants available to ALL scripts on this page
+  window.CURRENT_GAME_ID = "{{ game.id }}";
+  const GAME_ID      = "{{ game.id }}";
+  const DEX_SLUGS    = {{ pokedex_slugs_json | safe }};
+  const DLC_CONFIG   = {{ dlc_json | safe }};
+  const POKEAPI_BASE = "https://pokeapi.co/api/v2";
+  const BATCH_SIZE   = 15;
+
+  // Shared seeding helper: used by first-load, DLC, and National loaders.
+  async function postBatch(pokemonList, inRegionalDex, dexSource) {
+    if (!pokemonList.length) return;
+    const withFlag = pokemonList.map(p => ({
+      ...p,
+      in_regional_dex: inRegionalDex,
+      dex_source: dexSource,
+    }));
+    const r = await fetch("/api/seed/batch", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ game_id: GAME_ID, pokemon: withFlag }),
+    });
+    if (!r.ok) throw new Error(`Seed batch failed: HTTP ${r.status}`);
+  }
+</script>
+
+<!-- Sticky game header -->
+<div class="game-header">
+  <div class="game-header-inner">
+    <a href="/" class="back-link">&#8592; All Games</a>
+    <a href="/team-builder/{{ game.id }}" class="back-link" style="margin-left:8px;color:var(--pokeyellow);font-weight:700;" title="Open Team Builder">
+      &#127968; Team Builder
+    </a>
+    {% if game.gen != 10 %}
+    <button type="button" class="back-link" style="margin-left:8px;color:#7CFC98;font-weight:700;background:none;border:1px solid var(--border2);padding:6px 10px;border-radius:8px;"
+            onclick="confirmMarkAllCaught()" title="Mark every Pokémon in this game as caught">
+      ✅ Mark All Caught
+    </button>
+    {% endif %}
+
+    <!-- Cartridge image(s) -->
+    <div class="cart-pair">
+      <img src="{{ cart_img }}" alt="{{ game.name }}" class="game-cart-img game-cart-lg cart-a"/>
+      {% if cart_img_b %}
+      <img src="{{ cart_img_b }}" alt="{{ game.name }} alt" class="game-cart-img game-cart-lg cart-b"/>
+      {% endif %}
+    </div>
+
+    <div class="game-title-block">
+      <div class="game-title" style="color: {{ game.color }}">{{ game.name }}</div>
+      <div class="game-subtitle">{{ game.region }}
+        {% if game.gen %}&bull; Gen {{ game.gen }}{% endif %}
+        &bull; {{ game.year }}
+      </div>
+      {% if custom_note %}
+      <span class="game-note">{{ custom_note }}</span>
+      {% endif %}
+    </div>
+
+    {% if dex_mode == 'national' %}
+    <div class="national-mode-banner" role="status">
+      🌍 National Dex view — Pokémon numbered by their National Pokédex ID
+    </div>
+    {% endif %}
+
+    {% if cached and stats.total > 0 %}
+    {% set pct = ((stats.caught / stats.total) * 100) | int %}
+    <div class="game-progress-block">
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="hdr-caught">{{ stats.caught }} / {{ stats.total }}</span>
+          <span id="hdr-pct" class="pct-readable" style="color: {{ game.text_color or '#ffffff' }};">{{ pct }}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill accent" id="hdr-bar"
+               style="width: {{ pct }}%; --accent: {{ game.color }}"></div>
+        </div>
+      </div>
+      {% if stats.shiny > 0 %}
+      <div class="hdr-shiny" id="hdr-shiny">&#10024; <span id="hdr-shiny-count">{{ stats.shiny }}</span> shiny</div>
+      {% else %}
+      <div class="hdr-shiny" id="hdr-shiny" style="display:none">&#10024; <span id="hdr-shiny-count">0</span> shiny</div>
+      {% endif %}
+      {% if stats.last_updated %}
+      <div class="hdr-last-updated">last caught {{ stats.last_updated | relative_time }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  async function confirmMarkAllCaught() {
+    const ok = confirm(
+      "Mark ALL Pokémon in this game as caught?\n\n" +
+      "Please confirm you have truly completed this game’s Pokédex before continuing."
+    );
+    if (!ok) return;
+
+    const r = await fetch(`/game/${GAME_ID}/mark-all-caught`, { method: 'POST' });
+    if (!r.ok) {
+      alert('Could not mark all as caught right now. Please try again.');
+      return;
+    }
+
+    const data = await r.json();
+    alert(`Done! Updated ${data.changed ?? 0} entries.`);
+    window.location.reload();
+  }
+</script>
+
+<div class="container" style="padding-top: 8px;">
+
+  {% include "partials/type_chart.html" %}
+
+  {% if not cached %}
+  <!-- ── NOT CACHED: browser-side loader ── -->
+  <div class="loading-block">
+    <div class="loading-spinner" id="spinner"></div>
+    <div class="loading-title">Loading Pokédex...</div>
+    <p class="loading-sub">Fetching from PokéAPI. Only happens once per game!</p>
+    <div class="progress-wrap" style="max-width:280px; margin: 0 auto 8px;">
+      <div class="progress-track">
+        <div class="progress-fill" id="load-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div style="font-size:12px; color:var(--text-muted);" id="load-label">Starting...</div>
+    <div class="load-error" id="load-error" style="display:none;"></div>
+  </div>
+
+  <script>
+    const $label = document.getElementById("load-label");
+    const $bar   = document.getElementById("load-bar");
+    const $err   = document.getElementById("load-error");
+
+    function setBar(done, total) {
+      $bar.style.width = (total > 0 ? Math.round((done/total)*100) : 0) + "%";
+    }
+    function showError(msg) {
+      document.getElementById("spinner").style.display = "none";
+      $err.textContent = msg;
+      $err.style.display = "block";
+    }
+    async function fetchJSON(url) {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+    async function fetchPokemon(id, dexNum) {
+      const d = await fetchJSON(`${POKEAPI_BASE}/pokemon/${id}`);
+      const types = d.types.map(t => t.type.name);
+      const stats = Object.fromEntries(d.stats.map(s => [s.stat.name, s.base_stat]));
+      return {
+        id: d.id, dex_number: dexNum, name: d.name,
+        sprite_url: d.sprites?.front_default ||
+          `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${d.id}.png`,
+        sprite_shiny_url: d.sprites?.front_shiny || "",
+        types, height: d.height, weight: d.weight,
+        base_experience: d.base_experience,
+        hp: stats["hp"], attack: stats["attack"], defense: stats["defense"],
+        sp_attack: stats["special-attack"], sp_defense: stats["special-defense"],
+        speed: stats["speed"],
+      };
+    }
+    /**
+     * Collect species IDs from one or more PokéAPI pokedex slugs.
+     * Returns [{id, dex_number}, ...] deduplicated in slug order.
+     */
+    async function collectEntries(slugs) {
+      const seen = new Set(), entries = [];
+      let seqNum = 0;
+      const multiSlug = slugs.length > 1;
+      const usedDexNums = new Set();
+      let singleSlugHasDuplicateDexNum = false;
+
+      for (const slug of slugs) {
+        const data = await fetchJSON(`${POKEAPI_BASE}/pokedex/${slug}`);
+        for (const e of data.pokemon_entries) {
+          const id = parseInt(e.pokemon_species.url.replace(/\/$/, "").split("/").pop());
+          if (seen.has(id)) continue;
+
+          seen.add(id);
+          seqNum++;
+
+          let dexNum = multiSlug ? seqNum : e.entry_number;
+          if (!multiSlug) {
+            if (usedDexNums.has(dexNum)) {
+              singleSlugHasDuplicateDexNum = true;
+            }
+            usedDexNums.add(dexNum);
+          }
+
+          entries.push({ id, dex_number: dexNum });
+        }
+      }
+
+      // Safety: some PokéAPI dexes can contain duplicate entry_number values.
+      // If detected, normalize to stable sequential ordering so one game
+      // cannot appear as two overlapping dexes.
+      if (singleSlugHasDuplicateDexNum) {
+        entries.forEach((e, idx) => { e.dex_number = idx + 1; });
+      }
+
+      return { entries, seen };
+    }
+
+
+    async function loadDex() {
+      try {
+        // Ensure no stale rows from old seeds remain before first-load fetch
+        await fetch(`/api/seed/${GAME_ID}/reset`, { method: "POST" });
+
+        $label.textContent = "Fetching Pokédex list...";
+        const { entries } = await collectEntries(DEX_SLUGS);
+        const total = entries.length;
+        $label.textContent = `Found ${total} Pokémon — fetching details...`;
+        let done = 0;
+        let failures = 0;
+        for (let i = 0; i < total; i += BATCH_SIZE) {
+          const batch = entries.slice(i, i + BATCH_SIZE);
+          const fetched = await Promise.all(
+            batch.map(e => fetchPokemon(e.id, e.dex_number).catch(() => null))
+          );
+          const results = fetched.filter(Boolean);
+          failures += (batch.length - results.length);
+          await postBatch(results, true, "regional");
+          done += batch.length;
+          setBar(done, total);
+          $label.textContent = `${done} / ${total} loaded...${failures ? ` (${failures} failed)` : ''}`;
+        }
+        if (failures > 0) {
+          throw new Error(`Loaded with ${failures} missing Pokémon. Not marking complete; retry to fill gaps.`);
+        }
+        const completeResp = await fetch(`/api/seed/${GAME_ID}/complete`, { method: "POST" });
+        if (!completeResp.ok) throw new Error(`Finalize failed: HTTP ${completeResp.status}`);
+        window.location.reload();
+      } catch (err) {
+        showError("⚠ Could not reach PokéAPI: " + err.message);
+      }
+    }
+    loadDex();
+  </script>  {# end loading-screen script #}
+
+{% else %}
+  <!-- ── CACHED: full Pokédex ── -->
+
+  {# DLC loading overlay — hidden until loadDLC() is triggered #}
+  {% if game.dlc %}
+  <div id="dlc-loading-overlay" class="loading-block hidden">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Loading DLC Pokémon...</div>
+    <div class="progress-wrap" style="max-width:280px; margin: 0 auto 8px;">
+      <div class="progress-track">
+        <div class="progress-fill" id="dlc-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div style="font-size:12px; color:var(--text-muted);" id="dlc-label">Starting...</div>
+  </div>
+  <script>
+  async function loadDLC() {
+    const overlay = document.getElementById("dlc-loading-overlay");
+    const bar     = document.getElementById("dlc-bar");
+    const label   = document.getElementById("dlc-label");
+    overlay.classList.remove("hidden");
+
+    try {
+      // ── Step 1: ask our own server which IDs are already in the DB ────────
+      label.textContent = "Checking what's already loaded...";
+      const seededResp = await fetch(`/api/game/${GAME_ID}/seeded-ids`);
+      if (!seededResp.ok) throw new Error(`Server error ${seededResp.status} on seeded-ids`);
+      const { ids: rawIds } = await seededResp.json();
+      if (!Array.isArray(rawIds)) throw new Error("Unexpected response from seeded-ids");
+      const alreadySeeded = new Set(rawIds);
+      let nextDexNum = alreadySeeded.size;  // DLC entries follow regional ones
+
+      // ── Step 2: collect DLC entries that aren't already in the DB ─────────
+      const dlcEntries = [];
+      const seen = new Set();  // dedup across DLC packs
+      for (const dlcPack of DLC_CONFIG) {
+        label.textContent = `Fetching DLC list: ${dlcPack.name}...`;
+        const dexResp = await fetch(`${POKEAPI_BASE}/pokedex/${dlcPack.slug}`);
+        if (!dexResp.ok) throw new Error(`PokéAPI returned ${dexResp.status} for pokedex "${dlcPack.slug}"`);
+        const data = await dexResp.json();
+        if (!Array.isArray(data.pokemon_entries)) {
+          throw new Error(`No pokemon_entries in pokedex "${dlcPack.slug}" — slug may be wrong`);
+        }
+        for (const e of data.pokemon_entries) {
+          const id = parseInt(
+            e.pokemon_species.url.replace(/\/$/, "").split("/").pop()
+          );
+          if (!alreadySeeded.has(id) && !seen.has(id)) {
+            seen.add(id);
+            nextDexNum++;
+            dlcEntries.push({ id, dex_number: nextDexNum });
+          }
+        }
+      }
+
+      // ── Step 3: seed in batches ───────────────────────────────────────────
+      const total = dlcEntries.length;
+      console.log(`[DLC] ${total} new pokemon to seed (${alreadySeeded.size} already in DB)`);
+      label.textContent = total === 0
+        ? "Nothing new to add — marking complete..."
+        : `Seeding ${total} DLC Pokémon...`;
+
+      let done = 0;
+      let failures = 0;
+      for (let i = 0; i < total; i += BATCH_SIZE) {
+        const batch = dlcEntries.slice(i, i + BATCH_SIZE);
+        const results = (await Promise.all(
+          batch.map(e =>
+            fetch(`${POKEAPI_BASE}/pokemon/${e.id}`)
+              .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+              .then(d => ({
+                id:               d.id,
+                dex_number:       e.dex_number,
+                name:             d.name,
+                sprite_url:       d.sprites?.front_default || "",
+                sprite_shiny_url: d.sprites?.front_shiny   || "",
+                types:            d.types.map(t => t.type.name),
+                height:           d.height,
+                weight:           d.weight,
+                base_experience:  d.base_experience,
+                hp:         d.stats.find(s => s.stat.name === "hp")?.base_stat,
+                attack:     d.stats.find(s => s.stat.name === "attack")?.base_stat,
+                defense:    d.stats.find(s => s.stat.name === "defense")?.base_stat,
+                sp_attack:  d.stats.find(s => s.stat.name === "special-attack")?.base_stat,
+                sp_defense: d.stats.find(s => s.stat.name === "special-defense")?.base_stat,
+                speed:      d.stats.find(s => s.stat.name === "speed")?.base_stat,
+                in_regional_dex:  false,
+                dex_source:       "dlc",
+              }))
+              .catch(() => null)
+          )
+        )).filter(Boolean);
+
+        if (results.length) {
+          await postBatch(results, false, "dlc");
+        }
+        failures += (batch.length - results.length);
+        done += batch.length;
+        bar.style.width = Math.round((done / total) * 100) + "%";
+        label.textContent = `DLC: ${done} / ${total} Pokémon loaded${failures ? ` (${failures} failed)` : ''}`;
+      }
+
+      if (failures > 0) {
+        throw new Error(`DLC load incomplete (${failures} failed). Not marking complete.`);
+      }
+
+      // ── Step 4: mark complete + force a fresh page load ───────────────────
+      label.textContent = "Saving...";
+      const doneResp = await fetch(`/api/seed/${GAME_ID}/dlc-complete`, { method: "POST" });
+      if (!doneResp.ok) throw new Error(`Finalize failed: HTTP ${doneResp.status}`);
+
+      // window.location.replace() + cache-bust timestamp forces a fresh GET
+      // even if the URL was already /game/...?dex_mode=all.
+      const url = new URL(window.location.href);
+      url.searchParams.set("dex_mode", "all");
+      url.searchParams.set("_t", Date.now());  // cache buster
+      window.location.replace(url.toString());
+
+    } catch (err) {
+      console.error("[DLC] load failed:", err);
+      overlay.innerHTML = `
+        <p style="color:var(--danger); margin-bottom:12px;">
+          ⚠ DLC load failed: ${err.message}
+        </p>
+        <a class="filter-pill" href="?dex_mode=all&_t=${Date.now()}">
+          🔄 Try reloading anyway
+        </a>`;
+    }
+  }
+  </script>
+  {% endif %}{# end game.dlc #}
+
+  {# National Dex loading overlay — hidden until loadNationalDex() is triggered #}
+  {% if has_national_dex %}
+  <div id="national-loading-overlay" class="loading-block hidden">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Loading National Dex...</div>
+    <div class="progress-wrap" style="max-width:280px; margin: 0 auto 8px;">
+      <div class="progress-track">
+        <div class="progress-fill" id="national-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div style="font-size:12px; color:var(--text-muted);" id="national-label">Starting...</div>
+  </div>
+  <script>
+  async function loadNationalDex() {
+    const overlay = document.getElementById("national-loading-overlay");
+    const bar     = document.getElementById("national-bar");
+    const label   = document.getElementById("national-label");
+    const NATIONAL_MAX_ID = {{ national_max_id }};
+    
+    overlay.classList.remove("hidden");
+
+    try {
+      // ── Step 1: check what's already loaded ──────────────────────────────
+      label.textContent = "Checking what's already loaded...";
+      const seededResp = await fetch(`/api/game/${GAME_ID}/seeded-ids`);
+      if (!seededResp.ok) throw new Error(`Server error ${seededResp.status} on seeded-ids`);
+      const { ids: rawIds } = await seededResp.json();
+      const alreadySeeded = new Set(rawIds);
+
+      // ── Step 2: collect Pokémon IDs from #1 to national_max_id ───────────
+      const nationalEntries = [];
+      for (let id = 1; id <= NATIONAL_MAX_ID; id++) {
+        if (!alreadySeeded.has(id)) {
+          nationalEntries.push({ id, dex_number: id });  // National dex uses natural number
+        }
+      }
+
+      const total = nationalEntries.length;
+      console.log(`[National] ${total} new pokémon to seed (${alreadySeeded.size} already in DB)`);
+      label.textContent = total === 0
+        ? "Nothing new to add — marking complete..."
+        : `Seeding ${total} Pokémon for National Dex...`;
+
+      // ── Step 3: seed in batches ───────────────────────────────────────────
+      let done = 0;
+      let failures = 0;
+      for (let i = 0; i < total; i += BATCH_SIZE) {
+        const batch = nationalEntries.slice(i, i + BATCH_SIZE);
+        const results = (await Promise.all(
+          batch.map(e =>
+            fetch(`${POKEAPI_BASE}/pokemon/${e.id}`)
+              .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+              .then(d => ({
+                id:               d.id,
+                dex_number:       e.dex_number,
+                name:             d.name,
+                sprite_url:       d.sprites?.front_default || "",
+                sprite_shiny_url: d.sprites?.front_shiny   || "",
+                types:            d.types.map(t => t.type.name),
+                height:           d.height,
+                weight:           d.weight,
+                base_experience:  d.base_experience,
+                hp:         d.stats.find(s => s.stat.name === "hp")?.base_stat,
+                attack:     d.stats.find(s => s.stat.name === "attack")?.base_stat,
+                defense:    d.stats.find(s => s.stat.name === "defense")?.base_stat,
+                sp_attack:  d.stats.find(s => s.stat.name === "special-attack")?.base_stat,
+                sp_defense: d.stats.find(s => s.stat.name === "special-defense")?.base_stat,
+                speed:      d.stats.find(s => s.stat.name === "speed")?.base_stat,
+                in_regional_dex:  false,
+                dex_source:       "national"
+              }))
+              .catch(() => null)
+          )
+        )).filter(Boolean);
+
+        if (results.length) {
+          await postBatch(results, false, "national");
+        }
+        failures += (batch.length - results.length);
+        done += batch.length;
+        bar.style.width = Math.round((done / total) * 100) + "%";
+        label.textContent = `National: ${done} / ${total} Pokémon loaded${failures ? ` (${failures} failed)` : ''}`;
+      }
+
+      if (failures > 0) {
+        throw new Error(`National load incomplete (${failures} failed). Not marking complete.`);
+      }
+
+      // ── Step 4: mark complete + reload ────────────────────────────────────
+      label.textContent = "Saving...";
+      const doneResp = await fetch(`/api/seed/${GAME_ID}/national-complete`, { method: "POST" });
+      if (!doneResp.ok) throw new Error(`Finalize failed: HTTP ${doneResp.status}`);
+
+      // Reload in national mode
+      const url = new URL(window.location.href);
+      url.searchParams.set("dex_mode", "national");
+      url.searchParams.set("_t", Date.now());
+      window.location.replace(url.toString());
+
+    } catch (err) {
+      console.error("[National] load failed:", err);
+      overlay.innerHTML = `
+        <p style="color:var(--danger); margin-bottom:12px;">
+          ⚠ National Dex load failed: ${err.message}
+        </p>
+        <a class="filter-pill" href="?dex_mode=national&_t=${Date.now()}">
+          🔄 Try reloading anyway
+        </a>`;
+    }
+  }
+  </script>
+  {% endif %}{# end has_national_dex #}
+
+
+  {# ── DLC-ready banner: shows when DLC is cached but user is in regional view ── #}
+  {% if game.dlc and dlc_cached and dex_mode != 'all' %}
+  <div class="dlc-ready-banner" role="alert">
+    <span>🎮 DLC Pokémon are downloaded!</span>
+    <a class="dlc-ready-link"
+       href="?dex_mode=all"
+       aria-label="Show DLC Pokémon">
+      Show DLC Pokémon &rarr;
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Gym Guide panel -->
+  <div class="gym-panel" id="gym-panel">
+    <button class="gym-toggle" id="gym-toggle-btn"
+            onclick="toggleGymPanel()"
+            aria-expanded="false" aria-controls="gym-panel-body">
+      <span class="gym-toggle-icon">🏙️</span>
+      Gym Guide
+      <span class="gym-chevron" id="gym-chevron">&#9660;</span>
+    </button>
+    <div class="gym-panel-body" id="gym-panel-body" hidden></div>
+  </div>
+
+  <!-- Search + filter bar -->
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="search-icon">&#128269;</span>
+      <input
+        id="search-input"
+        type="text"
+        class="search-input"
+        placeholder="Search name or number..."
+        value="{{ search }}"
+        autocomplete="off"
+        aria-label="Search Pokémon"
+      />
+    </div>
+
+    <div class="filter-pills">
+      <button class="filter-pill active" data-filter="all"      onclick="setFilter(this)">All</button>
+      <button class="filter-pill"        data-filter="caught"   onclick="setFilter(this)">&#10003; Caught</button>
+      <button class="filter-pill"        data-filter="uncaught" onclick="setFilter(this)">&#10006; Uncaught</button>
+
+      {# ── DLC toggle (SwSh, SV, etc.) ── #}
+      <button class="filter-pill" onclick="repairDex()"
+              title="Reset and rebuild this game's dex data if counts look wrong">
+        🛠 Rebuild Dex
+      </button>
+
+      {% if game.dlc %}
+        {% if dlc_cached %}
+          {% if dex_mode == 'all' %}
+            <a class="filter-pill filter-pill-active-dlc"
+               href="?dex_mode=regional&filter={{ active_filter }}"
+               title="Showing Regional + DLC — click to show Regional only">
+              &#127760; Regional + DLC
+            </a>
+          {% else %}
+            <a class="filter-pill"
+               href="?dex_mode=all&filter={{ active_filter }}"
+               title="Click to include DLC Pokémon">
+              &#10133; Include DLC
+            </a>
+          {% endif %}
+        {% else %}
+          <button class="filter-pill" onclick="loadDLC()"
+                  title="Download DLC Pokémon from PokéAPI">
+            &#128229; Load DLC
+          </button>
+        {% endif %}
+      {% endif %}
+
+      {# ── National Dex toggle — shown when game tracks a national_max_id ── #}
+      {% if has_national_dex and cached %}
+        {% if national_cached %}
+          {# National Dex is loaded — show toggle #}
+          {% if dex_mode == 'national' %}
+            <a class="filter-pill filter-pill-national active-national"
+               href="?dex_mode=regional&filter={{ active_filter }}"
+               title="Showing National Dex ({{ national_max_id }} Pokémon) — click to return to Regional">
+              &#127758; National Dex
+            </a>
+          {% else %}
+            <a class="filter-pill filter-pill-national"
+               href="?dex_mode=national&filter={{ active_filter }}"
+               title="View ALL Pokémon up to #{{ national_max_id }} (National Dex)">
+              &#127758; National Dex
+            </a>
+          {% endif %}
+        {% else %}
+          {# National Dex not loaded yet — show load button #}
+          <button class="filter-pill" onclick="loadNationalDex()"
+                  title="Download all Pokémon up to #{{ national_max_id }} from PokéAPI">
+            &#128229; Load National Dex
+          </button>
+        {% endif %}
+      {% endif %}
+
+      <button class="filter-pill filter-pill-shiny" data-filter="shiny" onclick="setFilter(this)">✨ Shiny</button>
+    </div>
+
+    <span class="results-count" id="results-count"></span>
+    <div class="view-actions">
+      <label class="sort-wrap" for="sort-select">
+        <span class="sort-label">Sort</span>
+        <select id="sort-select" class="sort-select" aria-label="Sort Pokemon cards">
+          <option value="dex">Dex #</option>
+          <option value="name">Name A-Z</option>
+          <option value="missing-first">Missing First</option>
+          <option value="caught-first">Caught First</option>
+          <option value="shiny-first">Shiny First</option>
+        </select>
+      </label>
+      <button class="filter-pill filter-pill-muted" type="button" onclick="resetViewState()" title="Clear search, filters, type chip, and sort">
+        Reset View
+      </button>
+      <button class="filter-pill" type="button" onclick="pickRandomUncaught()" title="Pick a random uncaught Pokémon">🎲 Random</button>
+    </div>
+  </div>
+
+  <!-- Type filter chips — populated by JS from card data-types -->
+  <div class="type-filter-row" id="type-filter-row"></div>
+
+  <div class="view-summary" id="view-summary" aria-live="polite">
+    <div class="view-summary-card">
+      <span class="view-summary-label">Visible</span>
+      <strong class="view-summary-value" id="summary-visible">0</strong>
+      <span class="view-summary-sub" id="summary-visible-sub">of {{ stats.total }}</span>
+    </div>
+    <div class="view-summary-card">
+      <span class="view-summary-label">Caught In View</span>
+      <strong class="view-summary-value" id="summary-caught">0</strong>
+      <span class="view-summary-sub" id="summary-caught-sub">0 remaining</span>
+    </div>
+    <div class="view-summary-card">
+      <span class="view-summary-label">Shiny In View</span>
+      <strong class="view-summary-value" id="summary-shiny">0</strong>
+      <span class="view-summary-sub">Matches current view</span>
+    </div>
+    <div class="view-summary-card view-summary-card-accent">
+      <span class="view-summary-label">Next Target</span>
+      <strong class="view-summary-value view-summary-target" id="summary-target">Ready to hunt</strong>
+      <span class="view-summary-sub" id="summary-target-sub">First uncaught in this view</span>
+    </div>
+  </div>
+
+  <!-- Notes panel -->
+  <div class="notes-panel" id="notes-panel">
+    <button class="notes-toggle" onclick="toggleNotes()" aria-expanded="false" aria-controls="notes-body">
+      <span class="notes-toggle-icon">&#128196;</span>
+      Playthrough Notes
+      <span class="notes-chevron" id="notes-chevron">&#9660;</span>
+    </button>
+    <div class="notes-body" id="notes-body" hidden>
+      <form id="notes-form"
+            hx-post="/notes/{{ game.id }}"
+            hx-target="#notes-saved-slot"
+            hx-swap="innerHTML"
+            hx-trigger="keyup delay:800ms from:#notes-textarea, change from:#notes-textarea">
+        <textarea
+          id="notes-textarea"
+          name="notes"
+          class="notes-textarea"
+          placeholder="Jot down your strategy, trade notes, shiny hunts in progress..."
+          rows="5"
+          aria-label="Playthrough notes">{{ notes }}</textarea>
+        <div class="notes-footer">
+          <span id="notes-saved-slot"></span>
+          <span class="notes-hint">Auto-saves as you type</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Pokemon grid -->
+  <div id="pokemon-grid">
+    {% if grouped_regions %}
+      {% include "partials/pokemon_grid_regions.html" %}
+    {% else %}
+      {% include "partials/pokemon_grid.html" %}
+    {% endif %}
+  </div>
+
+  {% endif %}
+</div>
+
+<!-- Notes panel toggle (always rendered, no cached dependency) -->
+<script>
+/* Game version slugs for encounter location filtering */
+window.GAME_VERSIONS = {{ game.versions | tojson }};
+window.GAME_GEN = {{ game.gen | default(99) }};
+
+function toggleNotes() {
+  const body    = document.getElementById("notes-body");
+  const chevron = document.getElementById("notes-chevron");
+  const btn     = document.querySelector(".notes-toggle");
+  const isOpen  = !body.hidden;
+  body.hidden   = isOpen;
+  chevron.innerHTML = isOpen ? "&#9660;" : "&#9650;";
+  btn.setAttribute("aria-expanded", String(!isOpen));
+  if (!isOpen) document.getElementById("notes-textarea")?.focus();
+}
+
+</script>
+
+{% if cached %}
+<script>
+  async function repairDex() {
+    const ok = window.confirm("This will reset this game's dex cache and rebuild from scratch. Continue?");
+    if (!ok) return;
+    const r = await fetch(`/api/seed/${GAME_ID}/reset`, { method: "POST" });
+    if (!r.ok) {
+      alert(`Reset failed (HTTP ${r.status})`);
+      return;
+    }
+    window.location.href = `/game/${GAME_ID}?_t=${Date.now()}`;
+  }
+
+  /* ── State ── */
+  const TOTAL_POKEMON = {{ stats.total }};
+  const VIEW_STATE_KEY = `view_state_${GAME_ID}`;
+  let currentFilter = "all";
+  let activeType    = null;   // null = no type filter
+  let currentSort   = "dex";
+
+  const searchInput = document.getElementById("search-input");
+  const countEl     = document.getElementById("results-count");
+  const sortSelect  = document.getElementById("sort-select");
+  const summaryVisible    = document.getElementById("summary-visible");
+  const summaryVisibleSub = document.getElementById("summary-visible-sub");
+  const summaryCaught     = document.getElementById("summary-caught");
+  const summaryCaughtSub  = document.getElementById("summary-caught-sub");
+  const summaryShiny      = document.getElementById("summary-shiny");
+  const summaryTarget     = document.getElementById("summary-target");
+  const summaryTargetSub  = document.getElementById("summary-target-sub");
+
+  function loadViewState() {
+    try {
+      return JSON.parse(localStorage.getItem(VIEW_STATE_KEY) || "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  function saveViewState() {
+    localStorage.setItem(VIEW_STATE_KEY, JSON.stringify({
+      search: searchInput.value,
+      filter: currentFilter,
+      type: activeType,
+      sort: currentSort,
+    }));
+  }
+
+  function syncFilterButtons() {
+    document.querySelectorAll(".filter-pill[data-filter]").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.filter === currentFilter);
+    });
+  }
+
+  function syncTypeButtons() {
+    document.querySelectorAll(".type-chip").forEach(chip => {
+      chip.classList.toggle("active", chip.dataset.type === activeType);
+    });
+  }
+
+  /* ── Type colour map (matches server-side TYPE_COLORS) ── */
+  const TYPE_COLORS = {
+    normal:"#A8A878", fire:"#F08030", water:"#6890F0", electric:"#F8D030",
+    grass:"#78C850", ice:"#98D8D8", fighting:"#C03028", poison:"#A040A0",
+    ground:"#E0C068", flying:"#A890F0", psychic:"#F85888", bug:"#A8B820",
+    rock:"#B8A038", ghost:"#705898", dragon:"#7038F8", dark:"#705848",
+    steel:"#B8B8D0", fairy:"#EE99AC",
+  };
+
+  /* ── Build type chips from data on the cards ── */
+  function buildTypeChips() {
+    const row = document.getElementById("type-filter-row");
+    if (!row) return;
+
+    const types = new Set();
+    document.querySelectorAll(".poke-card").forEach(c => {
+      (c.dataset.types || "").split(",").filter(Boolean).forEach(t => types.add(t));
+    });
+
+    const sorted = [...types].sort();
+    row.innerHTML = sorted.map(t => {
+      const bg  = TYPE_COLORS[t] || "#777";
+      return `<button class="type-chip" data-type="${t}"
+        style="--chip-color:${bg}"
+        onclick="toggleTypeChip(this,'${t}')">${t}</button>`;
+    }).join("");
+  }
+
+  function toggleTypeChip(btn, type) {
+    if (activeType === type) {
+      // deselect
+      activeType = null;
+    } else {
+      activeType = type;
+    }
+    syncTypeButtons();
+    applyFilters();
+  }
+
+  function compareCards(a, b) {
+    const aNum = parseInt(a.dataset.num || "0", 10);
+    const bNum = parseInt(b.dataset.num || "0", 10);
+    const aName = (a.dataset.name || "").toLowerCase();
+    const bName = (b.dataset.name || "").toLowerCase();
+    const aCaught = a.classList.contains("caught");
+    const bCaught = b.classList.contains("caught");
+    const aShiny = a.classList.contains("shiny");
+    const bShiny = b.classList.contains("shiny");
+
+    switch (currentSort) {
+      case "name":
+        return aName.localeCompare(bName) || aNum - bNum;
+      case "missing-first":
+        return Number(aCaught) - Number(bCaught) || aNum - bNum;
+      case "caught-first":
+        return Number(bCaught) - Number(aCaught) || aNum - bNum;
+      case "shiny-first":
+        return Number(bShiny) - Number(aShiny) || Number(aCaught) - Number(bCaught) || aNum - bNum;
+      default:
+        return aNum - bNum;
+    }
+  }
+
+  function sortPokemonCards() {
+    document.querySelectorAll(".poke-grid").forEach(grid => {
+      const cards = [...grid.querySelectorAll(":scope > .poke-card")];
+      cards.sort(compareCards);
+      cards.forEach(card => grid.appendChild(card));
+    });
+  }
+
+  /* ── Core filter logic ── */
+  function updateCount(visible, caughtVisible) {
+    if (visible === TOTAL_POKEMON) {
+      countEl.textContent = `${visible} Pok\u00e9mon`;
+      return;
+    }
+    countEl.textContent = `${visible} visible • ${caughtVisible} caught`;
+  }
+
+  function updateSummary(visibleCards) {
+    const visible = visibleCards.length;
+    const caughtVisible = visibleCards.filter(card => card.classList.contains("caught")).length;
+    const shinyVisible = visibleCards.filter(card => card.classList.contains("shiny")).length;
+    const nextTarget = visibleCards.find(card => !card.classList.contains("caught"));
+
+    summaryVisible.textContent = String(visible);
+    summaryVisibleSub.textContent = visible === TOTAL_POKEMON ? `full dex loaded` : `of ${TOTAL_POKEMON} in this dex`;
+
+    summaryCaught.textContent = String(caughtVisible);
+    summaryCaughtSub.textContent = visible === 0
+      ? "Nothing matches current view"
+      : caughtVisible === visible
+        ? "View is fully caught"
+        : `${visible - caughtVisible} remaining`;
+
+    summaryShiny.textContent = String(shinyVisible);
+
+    if (nextTarget) {
+      summaryTarget.textContent = `#${nextTarget.dataset.num} ${nextTarget.dataset.name}`;
+      summaryTargetSub.textContent = "First uncaught in the current view";
+    } else if (visible > 0) {
+      summaryTarget.textContent = "Caught up";
+      summaryTargetSub.textContent = "Everything visible is already caught";
+    } else {
+      summaryTarget.textContent = "No matches";
+      summaryTargetSub.textContent = "Try clearing a search or filter";
+    }
+
+    updateCount(visible, caughtVisible);
+  }
+
+  function applyFilters() {
+    const s = searchInput.value.trim().toLowerCase();
+
+    document.querySelectorAll(".poke-card").forEach(card => {
+      const name   = (card.dataset.name  || "").toLowerCase();
+      const num    = (card.dataset.num   || "");
+      const types  = (card.dataset.types || "").split(",");
+      const caught = card.classList.contains("caught");
+
+      const matchSearch = !s || name.includes(s) || num.includes(s);
+      const matchFilter =
+        currentFilter === "all" ||
+        (currentFilter === "caught"   &&  caught) ||
+        (currentFilter === "uncaught" && !caught) ||
+        (currentFilter === "shiny"    &&  card.classList.contains("shiny"));
+      const matchType = !activeType || types.includes(activeType);
+
+      if (matchSearch && matchFilter && matchType) {
+        card.classList.remove("hidden");
+      } else {
+        card.classList.add("hidden");
+      }
+    });
+
+    sortPokemonCards();
+
+    // Hide empty region sections
+    document.querySelectorAll(".region-section").forEach(sec => {
+      const anyVisible = [...sec.querySelectorAll(".poke-card")]
+        .some(c => !c.classList.contains("hidden"));
+      sec.style.display = anyVisible ? "" : "none";
+    });
+
+    const visibleCards = [...document.querySelectorAll(".poke-card:not(.hidden)")];
+    updateSummary(visibleCards);
+    saveViewState();
+  }
+
+  function setFilter(btn) {
+    currentFilter = btn.dataset.filter;
+    syncFilterButtons();
+    applyFilters();
+  }
+
+  function resetViewState() {
+    currentFilter = "all";
+    activeType = null;
+    currentSort = "dex";
+    searchInput.value = "";
+    sortSelect.value = currentSort;
+    syncFilterButtons();
+    syncTypeButtons();
+    localStorage.removeItem(VIEW_STATE_KEY);
+    applyFilters();
+  }
+
+  const storedView = loadViewState();
+  if (typeof storedView.search === "string") searchInput.value = storedView.search;
+  if (typeof storedView.filter === "string") currentFilter = storedView.filter;
+  if (typeof storedView.type === "string") activeType = storedView.type;
+  if (typeof storedView.sort === "string") currentSort = storedView.sort;
+  if (!["dex", "name", "missing-first", "caught-first", "shiny-first"].includes(currentSort)) {
+    currentSort = "dex";
+  }
+  sortSelect.value = currentSort;
+
+  searchInput.addEventListener("input", applyFilters);
+  sortSelect.addEventListener("change", () => {
+    currentSort = sortSelect.value;
+    applyFilters();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    const tag = event.target?.tagName;
+    const isTyping = ["INPUT", "TEXTAREA", "SELECT"].includes(tag) || event.target?.isContentEditable;
+    if (!isTyping && event.key === "/") {
+      event.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+      return;
+    }
+    if (!isTyping && event.key.toLowerCase() === "r") {
+      event.preventDefault();
+      pickRandomUncaught();
+      return;
+    }
+    if (document.activeElement === searchInput && event.key === "Escape") {
+      searchInput.value = "";
+      applyFilters();
+    }
+  });
+
+  /* ── Progress bar updater after HTMX toggle ── */
+  function updateHeaderProgress(caught, total) {
+    const pct = total > 0 ? Math.round((caught / total) * 100) : 0;
+    const hc  = document.getElementById("hdr-caught");
+    const hp  = document.getElementById("hdr-pct");
+    const hb  = document.getElementById("hdr-bar");
+    if (hc) hc.textContent = caught + " / " + total;
+    if (hp) hp.textContent = pct + "%";
+    if (hb) hb.style.width = pct + "%";
+  }
+
+  function recountCaught() {
+    const caught = document.querySelectorAll(".poke-card.caught").length;
+    const shiny  = document.querySelectorAll(".poke-card.shiny").length;
+    updateHeaderProgress(caught, TOTAL_POKEMON);
+    // Milestone confetti check
+    if (typeof checkMilestones === 'function') checkMilestones(caught, TOTAL_POKEMON);
+    // Update shiny counter in header
+    const shinyEl  = document.getElementById("hdr-shiny");
+    const shinyNum = document.getElementById("hdr-shiny-count");
+    if (shinyEl && shinyNum) {
+      shinyNum.textContent = shiny;
+      shinyEl.style.display = shiny > 0 ? "" : "none";
+    }
+  }
+
+  document.addEventListener("htmx:afterSwap", () => {
+    recountCaught();
+    applyFilters();
+  });
+
+  /* ── Init ── */
+  buildTypeChips();
+  syncFilterButtons();
+  syncTypeButtons();
+  applyFilters();
+</script>
+{% endif %}
+
+<script src="/static/gym-data.js?v={{ js_v }}"></script>
+<script src="/static/gym-panel.js?v={{ js_v }}"></script>
+<script src="/static/type-chart.js?v={{ js_v }}"></script>
+<script src="/static/type-corrections.js?v={{ js_v }}"></script>
+
+{% endblock %}
