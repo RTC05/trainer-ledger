@@ -31,6 +31,7 @@ from database import (
 from auth import get_current_user_id, SESSION_COOKIE
 from routes_auth import router as auth_router
 from routes_stats import router as stats_router
+from routes_api_auth import router as api_auth_router
 from pokeapi import get_type_color
 from type_history import apply_corrections
 from seeder import seed_all_games
@@ -139,6 +140,7 @@ app = FastAPI(title="Trainer Ledger", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(auth_router)
 app.include_router(stats_router)
+app.include_router(api_auth_router)
 from app_templates import (  # noqa: E402
     templates,
     app_version  as _app_version,
