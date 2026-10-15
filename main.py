@@ -42,6 +42,7 @@ from v2_data import v2_demo_context, v2_game_context
 _PUBLIC_PREFIXES = (
     "/login",
     "/register",
+    "/api/auth",
     "/forgot-password",
     "/reset-password",
     "/about",
